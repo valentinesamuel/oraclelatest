@@ -1,0 +1,108 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum MatchStatus {
+  NOT_STARTED
+  LIVE
+  FINISHED
+  POSTPONED
+  VOID
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  POSTPONED
+  VOID
+}
+
+model Fixture {
+  id                  Int               @id
+  name                String
+  startingAt          DateTime
+  homeTeamName        String
+  homeFlagUrl         String
+  awayTeamName        String
+  awayFlagUrl         String
+  homeScore           Int?
+  awayScore           Int?
+  status              MatchStatus       @default(NOT_STARTED)
+  leagueId            Int
+  seasonId            Int
+  stateId             Int
+  round               String?
+  aiPreview           String?
+  rawSportmonksData   Json?
+  predictions         Prediction[]
+  jobQueue            JobQueue?
+  oraclePrediction    OraclePrediction?
+  createdAt           DateTime          @default(now())
+}
+
+model Prediction {
+  id                  Int      @id @default(autoincrement())
+  email               String
+  name                String
+  team                String
+  matchDate           String
+  fixtureId           Int
+  guessHome           Int
+  guessAway           Int
+  firstScorer         String   @default("")
+  processed           Boolean  @default(false)
+  exactScorePoints    Int      @default(0)
+  correctWinnerPoints Int      @default(0)
+  firstScorerPoints   Int      @default(0)
+  totalPoints         Int      @default(0)
+  createdAt           DateTime @default(now())
+  fixture             Fixture  @relation(fields: [fixtureId], references: [id])
+
+  @@unique([email, matchDate])
+  @@index([fixtureId, processed])
+}
+
+model Leaderboard {
+  email       String   @id
+  name        String
+  team        String
+  totalPoints Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@index([totalPoints(sort: Desc)])
+}
+
+model JobQueue {
+  id          Int       @id @default(autoincrement())
+  fixtureId   Int       @unique
+  processAt   DateTime
+  status      JobStatus @default(PENDING)
+  retryCount  Int       @default(0)
+  metadata    Json?
+  updatedAt   DateTime  @updatedAt
+  fixture     Fixture   @relation(fields: [fixtureId], references: [id])
+}
+
+model OraclePrediction {
+  id                   Int      @id @default(autoincrement())
+  fixtureId            Int      @unique
+  homeScore            Int
+  awayScore            Int
+  confidencePercentage Int
+  expectedGoalsHome    Float
+  expectedGoalsAway    Float
+  analyticalQuote      String
+  analyticalDriver     String
+  simulationsRun       String
+  upsetProbability     Int
+  oracleVerdict        String
+  generatedAt          DateTime @default(now())
+  fixture              Fixture  @relation(fields: [fixtureId], references: [id])
+}
