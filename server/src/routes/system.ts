@@ -1,5 +1,7 @@
 import { Router, Request } from 'express';
-import { prisma } from '../lib/prisma';
+import { eq } from 'drizzle-orm';
+import { db } from '../lib/db';
+import { jobQueue } from '../db/schema';
 import { runDailySync } from '../crons/midnight-sync';
 import { systemLogger } from '../lib/logger';
 
@@ -7,12 +9,13 @@ export const systemRouter = Router();
 
 systemRouter.post('/recover-state', async (_req, res) => {
   try {
-    const result = await prisma.jobQueue.updateMany({
-      where: { status: 'RUNNING' },
-      data: { status: 'PENDING' },
-    });
-    systemLogger.info({ recovered: result.count }, 'State recovery complete');
-    res.json({ recovered: result.count });
+    const updated = await db
+      .update(jobQueue)
+      .set({ status: 'PENDING', updatedAt: new Date() })
+      .where(eq(jobQueue.status, 'RUNNING'))
+      .returning({ id: jobQueue.id });
+    systemLogger.info({ recovered: updated.length }, 'State recovery complete');
+    res.json({ recovered: updated.length });
   } catch {
     res.status(500).json({ error: 'Recovery failed' });
   }

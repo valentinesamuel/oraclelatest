@@ -6,7 +6,9 @@ import { authMiddleware } from "./middleware/auth";
 import { healthRouter } from "./routes/health";
 import { systemRouter } from "./routes/system";
 import { predictionsRouter } from "./routes/predictions";
-import { prisma } from "./lib/prisma";
+import { db } from "./lib/db";
+import { jobQueue } from "./db/schema";
+import { eq } from "drizzle-orm";
 import { startMidnightCron } from "./crons/midnight-sync";
 import { startMasterTicker } from "./workers/master-ticker";
 import { logger, bootstrapLogger, serverLogger } from "./lib/logger";
@@ -66,13 +68,14 @@ app.use("/api/system", authMiddleware, systemRouter);
 app.use("/api/predictions", authMiddleware, predictionsRouter);
 
 async function bootstrapSweep(): Promise<void> {
-  const result = await prisma.jobQueue.updateMany({
-    where: { status: "RUNNING" },
-    data: { status: "PENDING" },
-  });
-  if (result.count > 0) {
+  const updated = await db
+    .update(jobQueue)
+    .set({ status: "PENDING", updatedAt: new Date() })
+    .where(eq(jobQueue.status, "RUNNING"))
+    .returning({ id: jobQueue.id });
+  if (updated.length > 0) {
     bootstrapLogger.info(
-      { recovered: result.count },
+      { recovered: updated.length },
       "Reset stuck RUNNING jobs to PENDING",
     );
   }

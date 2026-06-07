@@ -1,4 +1,6 @@
-import { prisma } from "../lib/prisma";
+import { eq, and, sql } from "drizzle-orm";
+import { db } from "../lib/db";
+import { fixture, prediction, leaderboard, jobQueue } from "../db/schema";
 import { calculatePoints } from "../utils/scoring";
 import {
   fetchFixtureWithEvents,
@@ -65,13 +67,14 @@ export async function runScoringEngine(fixtureId: number): Promise<void> {
 
   let processedTotal = 0;
   while (true) {
-    const batch = await prisma.prediction.findMany({
-      where: { fixtureId, processed: false },
-      take: BATCH_SIZE,
-    });
+    const batch = await db
+      .select()
+      .from(prediction)
+      .where(and(eq(prediction.fixtureId, fixtureId), eq(prediction.processed, false)))
+      .limit(BATCH_SIZE);
     if (batch.length === 0) break;
 
-    await prisma.$transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       for (const pred of batch) {
         const points = calculatePoints({
           guessHome: pred.guessHome,
@@ -82,29 +85,29 @@ export async function runScoringEngine(fixtureId: number): Promise<void> {
           actualFirstScorer,
         });
 
-        await tx.prediction.update({
-          where: { id: pred.id },
-          data: {
+        await tx.update(prediction)
+          .set({
             processed: true,
             exactScorePoints: points.exactScorePoints,
             correctWinnerPoints: points.correctWinnerPoints,
             firstScorerPoints: points.firstScorerPoints,
             totalPoints: points.totalPoints,
-          },
-        });
+          })
+          .where(eq(prediction.id, pred.id));
 
-        await tx.leaderboard.upsert({
-          where: { email: pred.email },
-          create: {
-            email: pred.email,
+        await tx.insert(leaderboard).values({
+          email: pred.email,
+          name: pred.name,
+          team: pred.team,
+          totalPoints: points.totalPoints,
+          updatedAt: new Date(),
+        }).onConflictDoUpdate({
+          target: leaderboard.email,
+          set: {
+            totalPoints: sql`${leaderboard.totalPoints} + ${points.totalPoints}`,
             name: pred.name,
             team: pred.team,
-            totalPoints: points.totalPoints,
-          },
-          update: {
-            totalPoints: { increment: points.totalPoints },
-            name: pred.name,
-            team: pred.team,
+            updatedAt: new Date(),
           },
         });
       }
@@ -115,20 +118,18 @@ export async function runScoringEngine(fixtureId: number): Promise<void> {
     await sleep(BATCH_SLEEP_MS);
   }
 
-  await prisma.fixture.update({
-    where: { id: fixtureId },
-    data: {
+  await db.update(fixture)
+    .set({
       status: "FINISHED",
       homeScore: actualHome,
       awayScore: actualAway,
       stateId: rawFixture.state_id,
-    },
-  });
+    })
+    .where(eq(fixture.id, fixtureId));
 
-  await prisma.jobQueue.update({
-    where: { fixtureId },
-    data: { status: "COMPLETED" },
-  });
+  await db.update(jobQueue)
+    .set({ status: "COMPLETED", updatedAt: new Date() })
+    .where(eq(jobQueue.fixtureId, fixtureId));
 
   log.info(
     { processedTotal, durationMs: Date.now() - startTime },
