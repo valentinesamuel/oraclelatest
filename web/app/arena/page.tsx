@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Leaderboard from '@/components/Leaderboard';
-import Ticker from '@/components/Ticker';
+ 
+import Ticker from '../../components/Ticker';
 import type { Fixture, LeaderboardEntry, OraclePrediction, Team } from '@/types';
+import Leaderboard from '../../components/Leaderboard';
 
 type View = 'select' | 'predict' | 'loading' | 'reveal';
 
