@@ -19,7 +19,7 @@
     "swr": "^2.2.5",
     "zustand": "^4.5.4",
     "typescript": "^5.9.3",
-    "@types/node": "^20.19.42",
+    "@types/node": "^20.19.42"
   },
   "devDependencies": {
     "@types/react": "^18",
