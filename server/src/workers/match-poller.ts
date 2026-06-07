@@ -1,4 +1,6 @@
-import { prisma } from '../lib/prisma';
+import { eq } from 'drizzle-orm';
+import { db } from '../lib/db';
+import { fixture, jobQueue, prediction } from '../db/schema';
 import { fetchFixtureWithEvents, SportmonksNotFoundError, TERMINAL_STATE_IDS, POSTPONED_STATE_IDS, VOID_STATE_IDS, SUSPENDED_STATE_IDS } from '../lib/sportmonks';
 import { runScoringEngine } from '../engines/scoring-engine';
 import { pollerLogger } from '../lib/logger';
@@ -30,21 +32,18 @@ export function startMatchPoller(fixtureId: number, onComplete: () => void): voi
         const newProcessAt = new Date(newStarting.getTime() + PROCESS_AT_OFFSET_MS);
         log.warn({ stateId, newProcessAt: formatDate(newProcessAt) }, 'Match postponed, rescheduling');
 
-        await prisma.jobQueue.update({
-          where: { fixtureId },
-          data: { status: 'PENDING', processAt: newProcessAt },
-        });
+        await db.update(jobQueue)
+          .set({ status: 'PENDING', processAt: newProcessAt, updatedAt: new Date() })
+          .where(eq(jobQueue.fixtureId, fixtureId));
 
         const newMatchDate = formatDate(newStarting);
-        await prisma.prediction.updateMany({
-          where: { fixtureId },
-          data: { matchDate: newMatchDate },
-        });
+        await db.update(prediction)
+          .set({ matchDate: newMatchDate })
+          .where(eq(prediction.fixtureId, fixtureId));
 
-        await prisma.fixture.update({
-          where: { id: fixtureId },
-          data: { status: 'POSTPONED', startingAt: newStarting, stateId },
-        });
+        await db.update(fixture)
+          .set({ status: 'POSTPONED', startingAt: newStarting, stateId })
+          .where(eq(fixture.id, fixtureId));
 
         onComplete();
         return;
@@ -53,15 +52,15 @@ export function startMatchPoller(fixtureId: number, onComplete: () => void): voi
       if (VOID_STATE_IDS.includes(stateId)) {
         clearInterval(interval);
         log.warn({ stateId }, 'Match voided');
-        await prisma.jobQueue.update({ where: { fixtureId }, data: { status: 'VOID' } });
-        await prisma.prediction.updateMany({
-          where: { fixtureId },
-          data: { processed: true, totalPoints: 0 },
-        });
-        await prisma.fixture.update({
-          where: { id: fixtureId },
-          data: { status: 'VOID', stateId },
-        });
+        await db.update(jobQueue)
+          .set({ status: 'VOID', updatedAt: new Date() })
+          .where(eq(jobQueue.fixtureId, fixtureId));
+        await db.update(prediction)
+          .set({ processed: true, totalPoints: 0 })
+          .where(eq(prediction.fixtureId, fixtureId));
+        await db.update(fixture)
+          .set({ status: 'VOID', stateId })
+          .where(eq(fixture.id, fixtureId));
         onComplete();
         return;
       }
@@ -70,14 +69,12 @@ export function startMatchPoller(fixtureId: number, onComplete: () => void): voi
         clearInterval(interval);
         const newProcessAt = new Date(Date.now() + PROCESS_AT_OFFSET_MS);
         log.warn({ stateId, newProcessAt: formatDate(newProcessAt) }, 'Match suspended, rescheduling 2h');
-        await prisma.jobQueue.update({
-          where: { fixtureId },
-          data: { status: 'PENDING', processAt: newProcessAt },
-        });
-        await prisma.fixture.update({
-          where: { id: fixtureId },
-          data: { status: 'POSTPONED', stateId },
-        });
+        await db.update(jobQueue)
+          .set({ status: 'PENDING', processAt: newProcessAt, updatedAt: new Date() })
+          .where(eq(jobQueue.fixtureId, fixtureId));
+        await db.update(fixture)
+          .set({ status: 'POSTPONED', stateId })
+          .where(eq(fixture.id, fixtureId));
         onComplete();
         return;
       }
@@ -91,10 +88,9 @@ export function startMatchPoller(fixtureId: number, onComplete: () => void): voi
           if (parts.length === 2) {
             const homeScore = Number.parseInt(parts[0], 10) || 0;
             const awayScore = Number.parseInt(parts[1], 10) || 0;
-            await prisma.fixture.update({
-              where: { id: fixtureId },
-              data: { homeScore, awayScore, status: 'LIVE', stateId },
-            });
+            await db.update(fixture)
+              .set({ homeScore, awayScore, status: 'LIVE', stateId })
+              .where(eq(fixture.id, fixtureId));
             log.debug({ homeScore, awayScore, stateId }, 'Live score updated');
           }
         }
@@ -107,7 +103,9 @@ export function startMatchPoller(fixtureId: number, onComplete: () => void): voi
           'Fixture not found / not in subscription — stopping poller',
         );
         try {
-          await prisma.jobQueue.update({ where: { fixtureId }, data: { status: 'VOID' } });
+          await db.update(jobQueue)
+            .set({ status: 'VOID', updatedAt: new Date() })
+            .where(eq(jobQueue.fixtureId, fixtureId));
         } catch (dbErr) {
           log.error({ dbErr, fixtureId }, 'Failed to mark job VOID after not-found');
         }

@@ -1,5 +1,7 @@
 import cron from "node-cron";
-import { prisma } from "../lib/prisma";
+import { eq } from "drizzle-orm";
+import { db } from "../lib/db";
+import { fixture, oraclePrediction, jobQueue } from "../db/schema";
 import { fetchFixturesForDate } from "../lib/sportmonks";
 import { generateOraclePrediction } from "../lib/claude";
 import { syncLogger } from "../lib/logger";
@@ -25,24 +27,23 @@ export async function runDailySync(
   let jobCount = 0;
 
   for (const f of fixtures) {
-    await prisma.fixture.upsert({
-      where: { id: f.id },
-      create: {
-        id: f.id,
-        name: f.name,
-        startingAt: f.startingAt,
-        homeTeamName: f.homeTeamName,
-        homeFlagUrl: f.homeFlagUrl,
-        awayTeamName: f.awayTeamName,
-        awayFlagUrl: f.awayFlagUrl,
-        leagueId: f.leagueId,
-        seasonId: f.seasonId,
-        stateId: f.stateId,
-        round: f.round,
-        status: f.status as any,
-        rawSportmonksData: f.rawSportmonksData as any,
-      },
-      update: {
+    await db.insert(fixture).values({
+      id: f.id,
+      name: f.name,
+      startingAt: f.startingAt,
+      homeTeamName: f.homeTeamName,
+      homeFlagUrl: f.homeFlagUrl,
+      awayTeamName: f.awayTeamName,
+      awayFlagUrl: f.awayFlagUrl,
+      leagueId: f.leagueId,
+      seasonId: f.seasonId,
+      stateId: f.stateId,
+      round: f.round,
+      status: f.status as any,
+      rawSportmonksData: f.rawSportmonksData as any,
+    }).onConflictDoUpdate({
+      target: fixture.id,
+      set: {
         name: f.name,
         startingAt: f.startingAt,
         stateId: f.stateId,
@@ -52,33 +53,33 @@ export async function runDailySync(
     });
     fixtureCount++;
 
-    const oracleExists = await prisma.oraclePrediction.findUnique({
-      where: { fixtureId: f.id },
-    });
+    const [oracleExists] = await db
+      .select({ id: oraclePrediction.id })
+      .from(oraclePrediction)
+      .where(eq(oraclePrediction.fixtureId, f.id))
+      .limit(1);
+
     if (!oracleExists) {
       const oracle = await generateOraclePrediction(
         f.homeTeamName,
         f.awayTeamName,
       );
-      await prisma.oraclePrediction.create({
-        data: {
-          fixtureId: f.id,
-          homeScore: oracle.homeScore,
-          awayScore: oracle.awayScore,
-          confidencePercentage: oracle.confidencePercentage,
-          expectedGoalsHome: oracle.expectedGoalsHome,
-          expectedGoalsAway: oracle.expectedGoalsAway,
-          analyticalQuote: oracle.analyticalQuote,
-          analyticalDriver: oracle.analyticalDriver,
-          simulationsRun: oracle.simulationsRun,
-          upsetProbability: oracle.upsetProbability,
-          oracleVerdict: oracle.oracleVerdict,
-        },
+      await db.insert(oraclePrediction).values({
+        fixtureId: f.id,
+        homeScore: oracle.homeScore,
+        awayScore: oracle.awayScore,
+        confidencePercentage: oracle.confidencePercentage,
+        expectedGoalsHome: oracle.expectedGoalsHome,
+        expectedGoalsAway: oracle.expectedGoalsAway,
+        analyticalQuote: oracle.analyticalQuote,
+        analyticalDriver: oracle.analyticalDriver,
+        simulationsRun: oracle.simulationsRun,
+        upsetProbability: oracle.upsetProbability,
+        oracleVerdict: oracle.oracleVerdict,
       });
-      await prisma.fixture.update({
-        where: { id: f.id },
-        data: { aiPreview: oracle.analyticalQuote },
-      });
+      await db.update(fixture)
+        .set({ aiPreview: oracle.analyticalQuote })
+        .where(eq(fixture.id, f.id));
       log.info(
         {
           fixtureId: f.id,
@@ -97,26 +98,28 @@ export async function runDailySync(
     const processAt = new Date(
       f.kickoffTimestamp * 1000 + PROCESS_AT_OFFSET_MS,
     );
-    const existing = await prisma.jobQueue.findUnique({
-      where: { fixtureId: f.id },
-    });
-    if (!existing) {
-      await prisma.jobQueue.create({
-        data: {
-          fixtureId: f.id,
-          processAt,
-          status: "PENDING",
-          metadata: {
-            homeTeamName: f.homeTeamName,
-            awayTeamName: f.awayTeamName,
-            homeFlagUrl: f.homeFlagUrl,
-            awayFlagUrl: f.awayFlagUrl,
-            kickoffTimestamp: f.kickoffTimestamp,
-            startingAt: f.startingAt.toISOString(),
-            leagueId: f.leagueId,
-            seasonId: f.seasonId,
-            round: f.round,
-          },
+    const [existingJob] = await db
+      .select({ id: jobQueue.id })
+      .from(jobQueue)
+      .where(eq(jobQueue.fixtureId, f.id))
+      .limit(1);
+
+    if (!existingJob) {
+      await db.insert(jobQueue).values({
+        fixtureId: f.id,
+        processAt,
+        status: "PENDING",
+        updatedAt: new Date(),
+        metadata: {
+          homeTeamName: f.homeTeamName,
+          awayTeamName: f.awayTeamName,
+          homeFlagUrl: f.homeFlagUrl,
+          awayFlagUrl: f.awayFlagUrl,
+          kickoffTimestamp: f.kickoffTimestamp,
+          startingAt: f.startingAt.toISOString(),
+          leagueId: f.leagueId,
+          seasonId: f.seasonId,
+          round: f.round,
         },
       });
       jobCount++;

@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
-import { prisma } from '../lib/prisma';
+import { eq, and } from 'drizzle-orm';
+import { db } from '../lib/db';
+import { fixture, prediction } from '../db/schema';
 import { buildEmail, validateEmailDomain } from '../utils/email';
 import { predictionsLogger } from '../lib/logger';
 
@@ -68,49 +70,51 @@ predictionsRouter.post('/', globalLimiter, perEmailLimiter, async (req: Request,
     return;
   }
 
-  const fixture = await prisma.fixture.findUnique({
-    where: { id: Number(body.fixtureId) },
-  });
-  if (!fixture) {
+  const [found] = await db
+    .select()
+    .from(fixture)
+    .where(eq(fixture.id, Number(body.fixtureId)))
+    .limit(1);
+  if (!found) {
     res.status(404).json({ error: 'Fixture not found' });
     return;
   }
 
-  if (Date.now() >= fixture.startingAt.getTime()) {
+  if (Date.now() >= found.startingAt.getTime()) {
     res.status(403).json({ error: 'Prediction window closed. Match has already kicked off.' });
     return;
   }
 
-  const matchDate = fixture.startingAt.toISOString().slice(0, 10);
+  const matchDate = found.startingAt.toISOString().slice(0, 10);
 
-  const existing = await prisma.prediction.findUnique({
-    where: { email_matchDate: { email, matchDate } },
-  });
+  const [existing] = await db
+    .select({ id: prediction.id })
+    .from(prediction)
+    .where(and(eq(prediction.email, email), eq(prediction.matchDate, matchDate)))
+    .limit(1);
   if (existing) {
     res.status(400).json({ error: 'You have already submitted a prediction for this date.' });
     return;
   }
 
   try {
-    await prisma.prediction.create({
-      data: {
-        email,
-        name,
-        team: body.team,
-        matchDate,
-        fixtureId: fixture.id,
-        guessHome,
-        guessAway,
-        firstScorer: (body.firstScorer ?? '').trim(),
-      },
+    await db.insert(prediction).values({
+      email,
+      name,
+      team: body.team,
+      matchDate,
+      fixtureId: found.id,
+      guessHome,
+      guessAway,
+      firstScorer: (body.firstScorer ?? '').trim(),
     });
     res.status(200).json({ message: 'Prediction saved' });
   } catch (err: unknown) {
-    if (err instanceof Error && err.message.includes('Unique constraint')) {
+    if ((err as any)?.code === '23505') {
       res.status(400).json({ error: 'You have already submitted a prediction for this date.' });
       return;
     }
-    predictionsLogger.error({ err, email, fixtureId: fixture.id }, 'Prediction insert failed');
+    predictionsLogger.error({ err, email, fixtureId: found.id }, 'Prediction insert failed');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

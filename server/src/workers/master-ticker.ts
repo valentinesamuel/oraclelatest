@@ -1,4 +1,5 @@
-import { prisma } from '../lib/prisma';
+import { sql } from 'drizzle-orm';
+import { db } from '../lib/db';
 import { startMatchPoller } from './match-poller';
 import { tickerLogger } from '../lib/logger';
 
@@ -18,7 +19,7 @@ export function startMasterTicker(): void {
     }
 
     try {
-      const jobs = await prisma.$queryRaw<{ id: number; fixtureId: number }[]>`
+      const result = await db.execute(sql`
         UPDATE "JobQueue"
         SET status = 'RUNNING', "updatedAt" = NOW()
         WHERE id = (
@@ -29,11 +30,11 @@ export function startMasterTicker(): void {
           FOR UPDATE SKIP LOCKED
         )
         RETURNING id, "fixtureId"
-      `;
+      `);
 
-      if (!jobs || jobs.length === 0) return;
+      if (!result.rows || result.rows.length === 0) return;
 
-      const job = jobs[0];
+      const job = result.rows[0] as { id: number; fixtureId: number };
       activeJobsCount++;
       tickerLogger.info({ jobId: job.id, fixtureId: job.fixtureId, active: activeJobsCount }, 'Job claimed');
 
