@@ -40,6 +40,7 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           SSH_PRIVATE_KEY: op://Bastion/bastion_vps/private key
           DEPLOY_ENV: op://Bastion/project_techgrowthfwcapi/notesPlain
+          GHCR_TOKEN: op://Bastion/bastion_ghcr_push/credential
 
       - name: Deploy
         uses: appleboy/ssh-action@v1
@@ -52,9 +53,11 @@ jobs:
           debug: true
           script: |
             cd /opt/projects/techgrowthfwcapi
+            echo ${{ env.GHCR_TOKEN }} | docker login ghcr.io -u valentinesamuel --password-stdin
             cat > .env << 'ENVEOF'
             ${{ env.DEPLOY_ENV }}
             ENVEOF
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
+            docker logout ghcr.io
