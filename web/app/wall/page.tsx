@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import Leaderboard from '@/components/Leaderboard';
+import Leaderboard from '../../components/Leaderboard';
 import type { Fixture, LeaderboardEntry } from '@/types';
 
 function statusLabel(status: string): string {

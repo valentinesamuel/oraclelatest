@@ -23,9 +23,9 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./server/Dockerfile
           push: true
-          tags: ghcr.io/valentinesamuel/techgrowthfwc:latest
+          tags: ghcr.io/valentinesamuel/techgrowthfwcapi:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -38,7 +38,7 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           SSH_PRIVATE_KEY: op://Bastion/bastion_vps/private key
-          DEPLOY_ENV: op://Bastion/project_techgrowthfwc/notesPlain
+          DEPLOY_ENV: op://Bastion/project_techgrowthfwcapi/notesPlain
 
       - name: Deploy
         uses: appleboy/ssh-action@v1
@@ -50,7 +50,7 @@ jobs:
           script_stop: true
           debug: true
           script: |
-            cd /opt/projects/techgrowthfwc
+            cd /opt/projects/techgrowthfwcapi
             cat > .env << 'ENVEOF'
             ${{ env.DEPLOY_ENV }}
             ENVEOF
