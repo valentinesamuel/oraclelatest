@@ -52,9 +52,11 @@ jobs:
           debug: true
           script: |
             cd /opt/projects/techgrowthfwcapi
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             cat > .env << 'ENVEOF'
             ${{ env.DEPLOY_ENV }}
             ENVEOF
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
+            docker logout ghcr.io
