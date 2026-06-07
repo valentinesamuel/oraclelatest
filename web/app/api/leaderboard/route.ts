@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/db';
-import { getMondayMidnightWAT, obfuscateEmail } from '@/lib/utils';
+import { getMondayMidnightWAT, obfuscateEmail } from '../../../lib/utils';
 
 export async function GET() {
   const weekStart = getMondayMidnightWAT();

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Fixture, OraclePrediction } from '@/types';
+import type { Fixture, OraclePrediction } from '../types';
 
 interface Props {
   fixture: Fixture;

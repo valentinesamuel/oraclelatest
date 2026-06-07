@@ -1,6 +1,10 @@
 import "dotenv/config";
+import path from "path";
 import express, { Request, Response, NextFunction } from "express";
 import pinoHttp from "pino-http";
+import { Client } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { corsMiddleware } from "./middleware/cors";
 import { authMiddleware } from "./middleware/auth";
 import { healthRouter } from "./routes/health";
@@ -67,6 +71,20 @@ app.use("/api/health", healthRouter);
 app.use("/api/system", authMiddleware, systemRouter);
 app.use("/api/predictions", authMiddleware, predictionsRouter);
 
+async function runMigrations(): Promise<void> {
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    const migrationDb = drizzle(client);
+    await migrate(migrationDb, {
+      migrationsFolder: path.resolve(process.cwd(), "drizzle"),
+    });
+    bootstrapLogger.info("Database migrations applied successfully");
+  } finally {
+    await client.end();
+  }
+}
+
 async function bootstrapSweep(): Promise<void> {
   const updated = await db
     .update(jobQueue)
@@ -82,6 +100,7 @@ async function bootstrapSweep(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  await runMigrations();
   await bootstrapSweep();
   startMidnightCron();
   startMasterTicker();

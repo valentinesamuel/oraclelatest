@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
  
 import Ticker from '../../components/Ticker';
-import type { Fixture, LeaderboardEntry, OraclePrediction, Team } from '@/types';
+import type { Fixture, LeaderboardEntry, OraclePrediction, Team } from '../../types';
 import Leaderboard from '../../components/Leaderboard';
 
 type View = 'select' | 'predict' | 'loading' | 'reveal';
