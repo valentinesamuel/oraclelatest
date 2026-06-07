@@ -1,6 +1,6 @@
 'use client';
 
-import type { Fixture } from '@/types';
+import type { Fixture } from '../types';
 
 interface Props {
   fixtures: Fixture[];

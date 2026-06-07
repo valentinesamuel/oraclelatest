@@ -1,8 +1,8 @@
 'use client';
 
-import type { LeaderboardEntry } from '@/types';
+import type { LeaderboardEntry } from '../types';
 
-const AV_COLORS = ['#00d4ff','#00ffa3','#ffd700','#ff6b6b','#c084fc','#fb923c','#34d399','#60a5fa','#f472b6','#a78bfa'];
+const AV_COLORS = ['#00d4ff', '#00ffa3', '#ffd700', '#ff6b6b', '#c084fc', '#fb923c', '#34d399', '#60a5fa', '#f472b6', '#a78bfa'];
 const TEAM_COLORS: Record<string, string> = {
   'Team Budweiser': '#e63946',
   'Team Trophy': '#f4a261',
@@ -30,7 +30,7 @@ export default function Leaderboard({ leaderboard, maxRows = 12 }: Props) {
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {sorted.map((entry, i) => {
           const rankColor = i === 0 ? 'var(--gold)' : i === 1 ? '#b0b8c8' : i === 2 ? '#cd8e60' : 'var(--t3)';
-          const rankLabel = i < 3 ? ['①','②','③'][i] : String(i + 1);
+          const rankLabel = i < 3 ? ['①', '②', '③'][i] : String(i + 1);
           const col = AV_COLORS[i % AV_COLORS.length];
 
           return (

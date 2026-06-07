@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Leaderboard from '../../components/Leaderboard';
-import type { Fixture, LeaderboardEntry } from '@/types';
+import type { Fixture, LeaderboardEntry } from '../../types';
 
 function statusLabel(status: string): string {
   switch (status) {
