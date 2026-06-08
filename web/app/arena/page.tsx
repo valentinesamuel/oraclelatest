@@ -245,7 +245,7 @@ export default function ArenaPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 38, height: 38, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', background: 'var(--c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#000' }}>O</div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: 6, color: 'var(--c)', lineHeight: 1 }}>ORACLE</div>
+            <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: 6, color: 'var(--c)', lineHeight: 1 }}>BATTLE OF THE BRANDS</div>
             <div style={{ fontSize: 9, letterSpacing: 4, color: 'var(--t3)' }}>PREDICTION ENGINE v4.1 · FIFA WORLD CUP 2026</div>
           </div>
         </div>
@@ -310,10 +310,10 @@ export default function ArenaPage() {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', gap: 28, textAlign: 'center' }}>
               <div style={{ width: 76, height: 76, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', background: 'rgba(0,212,255,0.1)', border: '2px solid rgba(0,212,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, color: 'var(--c)', animation: 'pulse-glow 3s infinite' }}>O</div>
               <div>
-                <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: 4, color: 'var(--c)', marginBottom: 10 }}>ORACLE IS READY</div>
+                <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: 4, color: 'var(--c)', marginBottom: 10 }}>BOTB IS READY</div>
                 <div style={{ fontSize: 14, color: 'var(--t2)', lineHeight: 1.8, maxWidth: 400 }}>
                   Select an upcoming fixture from the left.<br />
-                  Predict blind — ORACLE's call is sealed until after you submit.<br />
+                  Predict blind — BOTB's call is sealed until after you submit.<br />
                   <strong style={{ color: 'var(--c3)' }}>Points are awarded automatically at Full Time.</strong>
                 </div>
               </div>
@@ -367,7 +367,7 @@ export default function ArenaPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.12)', borderRadius: 6 }}>
                   <span style={{ fontSize: 14 }}>🔒</span>
-                  <span style={{ fontSize: 11, color: 'var(--t3)', letterSpacing: 1 }}>ORACLE's prediction is sealed until you submit. Points awarded at Full Time.</span>
+                  <span style={{ fontSize: 11, color: 'var(--t3)', letterSpacing: 1 }}>BOTB's prediction is sealed until you submit. Points awarded at Full Time.</span>
                 </div>
               </div>
               <div style={{ padding: '16px 24px 20px', display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
@@ -420,7 +420,7 @@ export default function ArenaPage() {
                 </div>
                 <button onClick={handleSubmit} disabled={!userName.trim() || !emailPrefix.trim()}
                   style={{ width: '100%', border: 'none', borderRadius: 6, padding: '16px', background: (!userName.trim() || !emailPrefix.trim()) ? 'var(--b2)' : 'linear-gradient(135deg,var(--c),var(--c2))', color: (!userName.trim() || !emailPrefix.trim()) ? 'var(--t3)' : '#000', fontFamily: 'var(--font-head)', fontSize: 19, fontWeight: 800, letterSpacing: 3, cursor: (!userName.trim() || !emailPrefix.trim()) ? 'not-allowed' : 'pointer' }}>
-                  ⚡ LOCK IN &amp; CHALLENGE ORACLE
+                  ⚡ LOCK IN &amp; CHALLENGE BOTB
                 </button>
               </div>
             </div>
@@ -504,7 +504,7 @@ export default function ArenaPage() {
                 )}
                 {revealStep >= 3 && (
                   <div style={{ animation: 'slide-up 0.4s ease', background: 'var(--bg2)', border: '1px solid var(--b1)', borderRadius: 8, padding: '14px 16px' }}>
-                    <div style={{ fontSize: 9, letterSpacing: 3, color: 'var(--t3)', marginBottom: 10 }}>ORACLE'S PRE-MATCH ANALYSIS</div>
+                    <div style={{ fontSize: 9, letterSpacing: 3, color: 'var(--t3)', marginBottom: 10 }}>BOTB'S PRE-MATCH ANALYSIS</div>
                     {[
                       { label: fix.homeTeamName.substring(0,3).toUpperCase(), val: xgHome, color: 'var(--c)' },
                       { label: fix.awayTeamName.substring(0,3).toUpperCase(), val: xgAway, color: 'var(--c2)' },
@@ -531,10 +531,10 @@ export default function ArenaPage() {
                 )}
                 {revealStep >= 4 && (
                   <div style={{ animation: 'slide-up 0.4s ease', background: 'var(--bg2)', border: '1px solid rgba(0,212,255,0.2)', borderLeft: '3px solid var(--c)', borderRadius: 8, padding: '14px 18px' }}>
-                    <div style={{ fontSize: 9, letterSpacing: 3, color: 'var(--c)', marginBottom: 8 }}>ORACLE RESPONDS</div>
+                    <div style={{ fontSize: 9, letterSpacing: 3, color: 'var(--c)', marginBottom: 8 }}>BOTB RESPONDS</div>
                     <div style={{ fontSize: 16, fontStyle: 'italic', color: 'var(--t1)', lineHeight: 1.6, marginBottom: 8 }}>&ldquo;{oracle.analyticalQuote}&rdquo;</div>
                     <div style={{ fontSize: 10, color: 'var(--t3)', letterSpacing: 2, fontFamily: 'var(--font-mono)' }}>
-                      — ORACLE v4.1 · {oracle.analyticalDriver}
+                      — BOTB · {oracle.analyticalDriver}
                     </div>
                   </div>
                 )}

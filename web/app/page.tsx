@@ -32,7 +32,7 @@ export default function HomePage() {
           fontSize: 24, fontWeight: 900, color: '#000',
         }}>O</div>
         <div style={{ fontSize: 52, fontWeight: 900, letterSpacing: 10, color: 'var(--c)', lineHeight: 1 }}>
-          ORACLE
+          BATTLE OF THE BRANDS
         </div>
         <div style={{ fontSize: 12, letterSpacing: 5, color: 'var(--t3)', marginTop: 8 }}>
           FIFA WORLD CUP 2026 · AI PREDICTION ENGINE
@@ -52,7 +52,7 @@ export default function HomePage() {
               PREDICTION ARENA
             </div>
             <div style={{ fontSize: 12, color: 'var(--t3)', lineHeight: 1.4 }}>
-              Kiosk / tablet view. Challenge ORACLE, submit predictions, earn points.
+              Kiosk / tablet view. Submit predictions, earn points.
             </div>
           </div>
         </Link>
