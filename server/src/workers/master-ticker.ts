@@ -8,11 +8,15 @@ const TICK_INTERVAL_MS = 1000;
 const MAX_CONCURRENT_JOBS = 2;
 
 let activeJobsCount = 0;
+let consecutiveErrors = 0;
+let backoffUntil = 0;
 
 export function startMasterTicker(): void {
   tickerLogger.info({ intervalMs: TICK_INTERVAL_MS, maxConcurrent: MAX_CONCURRENT_JOBS }, 'Master ticker started');
 
   setInterval(async () => {
+    if (Date.now() < backoffUntil) return;
+
     if (activeJobsCount >= MAX_CONCURRENT_JOBS) {
       tickerLogger.debug({ active: activeJobsCount, max: MAX_CONCURRENT_JOBS }, 'Tick skipped: at capacity');
       return;
@@ -32,6 +36,9 @@ export function startMasterTicker(): void {
         RETURNING id, "fixtureId"
       `);
 
+      consecutiveErrors = 0;
+      backoffUntil = 0;
+
       if (!result.rows || result.rows.length === 0) return;
 
       const job = result.rows[0] as { id: number; fixtureId: number };
@@ -43,7 +50,10 @@ export function startMasterTicker(): void {
         tickerLogger.info({ jobId: job.id, active: activeJobsCount }, 'Job completed');
       });
     } catch (err) {
-      tickerLogger.error({ err }, 'Tick cycle error');
+      consecutiveErrors++;
+      const nextRetryMs = Math.min(Math.pow(2, consecutiveErrors) * 1000, 60_000);
+      backoffUntil = Date.now() + nextRetryMs;
+      tickerLogger.error({ err, consecutiveErrors, nextRetryMs }, 'Tick cycle error');
     }
   }, TICK_INTERVAL_MS);
 }

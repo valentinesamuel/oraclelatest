@@ -15,6 +15,7 @@ import { jobQueue } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { startMidnightCron } from "./crons/midnight-sync";
 import { startMasterTicker } from "./workers/master-ticker";
+import { startKeepAlive } from "./workers/keepalive";
 import { logger, bootstrapLogger, serverLogger } from "./lib/logger";
 
 const app = express();
@@ -104,6 +105,7 @@ async function main(): Promise<void> {
   await bootstrapSweep();
   startMidnightCron();
   startMasterTicker();
+  startKeepAlive();
   app.listen(PORT, () => {
     serverLogger.info({ port: PORT }, "Server listening");
   });

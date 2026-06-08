@@ -50,7 +50,7 @@ function fallbackOracle(homeTeam: string, awayTeam: string): OracleData {
 export async function generateOraclePrediction(
   homeTeam: string,
   awayTeam: string,
-): Promise<OracleData> {
+): Promise<OracleData | null> {
   const log = claudeLogger.child({ homeTeam, awayTeam });
   const t0 = Date.now();
 
@@ -81,6 +81,16 @@ export async function generateOraclePrediction(
 
     return parsed.data;
   } catch (err) {
+    const isCreditsExhausted =
+      err instanceof Anthropic.BadRequestError &&
+      err.status === 400 &&
+      err.message.includes('credit balance is too low');
+
+    if (isCreditsExhausted) {
+      log.warn({ latencyMs: Date.now() - t0 }, 'Oracle skipped: Anthropic credit balance exhausted');
+      return null;
+    }
+
     log.error({ err, latencyMs: Date.now() - t0 }, 'Oracle API call failed, using fallback');
     return fallbackOracle(homeTeam, awayTeam);
   }
