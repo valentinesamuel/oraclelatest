@@ -64,30 +64,35 @@ export async function runDailySync(
         f.homeTeamName,
         f.awayTeamName,
       );
-      await db.insert(oraclePrediction).values({
-        fixtureId: f.id,
-        homeScore: oracle.homeScore,
-        awayScore: oracle.awayScore,
-        confidencePercentage: oracle.confidencePercentage,
-        expectedGoalsHome: oracle.expectedGoalsHome,
-        expectedGoalsAway: oracle.expectedGoalsAway,
-        analyticalQuote: oracle.analyticalQuote,
-        analyticalDriver: oracle.analyticalDriver,
-        simulationsRun: oracle.simulationsRun,
-        upsetProbability: oracle.upsetProbability,
-        oracleVerdict: oracle.oracleVerdict,
-      });
-      await db.update(fixture)
-        .set({ aiPreview: oracle.analyticalQuote })
-        .where(eq(fixture.id, f.id));
-      log.info(
-        {
+
+      if (oracle === null) {
+        log.warn({ fixtureId: f.id }, 'Oracle prediction skipped: credits exhausted');
+      } else {
+        await db.insert(oraclePrediction).values({
           fixtureId: f.id,
-          verdict: oracle.oracleVerdict,
-          confidence: oracle.confidencePercentage,
-        },
-        "Oracle prediction generated",
-      );
+          homeScore: oracle.homeScore,
+          awayScore: oracle.awayScore,
+          confidencePercentage: oracle.confidencePercentage,
+          expectedGoalsHome: oracle.expectedGoalsHome,
+          expectedGoalsAway: oracle.expectedGoalsAway,
+          analyticalQuote: oracle.analyticalQuote,
+          analyticalDriver: oracle.analyticalDriver,
+          simulationsRun: oracle.simulationsRun,
+          upsetProbability: oracle.upsetProbability,
+          oracleVerdict: oracle.oracleVerdict,
+        });
+        await db.update(fixture)
+          .set({ aiPreview: oracle.analyticalQuote })
+          .where(eq(fixture.id, f.id));
+        log.info(
+          {
+            fixtureId: f.id,
+            verdict: oracle.oracleVerdict,
+            confidence: oracle.confidencePercentage,
+          },
+          "Oracle prediction generated",
+        );
+      }
     } else {
       log.debug(
         { fixtureId: f.id },
