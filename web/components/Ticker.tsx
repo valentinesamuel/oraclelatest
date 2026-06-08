@@ -24,7 +24,7 @@ export default function Ticker({ topPlayer, topPts, totalPreds }: Props) {
   return (
     <div style={{ height: 40, background: 'var(--bg2)', borderTop: '1px solid var(--b1)', display: 'flex', alignItems: 'center', overflow: 'hidden', flexShrink: 0 }}>
       <div style={{ padding: '0 16px', height: '100%', display: 'flex', alignItems: 'center', borderRight: '1px solid var(--b1)', fontSize: 9, letterSpacing: 3, color: 'var(--c)', fontWeight: 700, whiteSpace: 'nowrap' }}>
-        ORACLE LIVE FEED
+        BOTB LIVE FEED
       </div>
       <div style={{ flex: 1, overflow: 'hidden', height: '100%', display: 'flex', alignItems: 'center' }}>
         <div style={{ whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t3)', animation: 'ticker-scroll 60s linear infinite', display: 'inline-block' }}>

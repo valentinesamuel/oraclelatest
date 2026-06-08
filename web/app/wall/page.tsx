@@ -121,7 +121,7 @@ export default function WallPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ width: 46, height: 46, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', background: 'var(--c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: '#000' }}>O</div>
           <div>
-            <div style={{ fontSize: 34, fontWeight: 900, letterSpacing: 8, color: 'var(--c)', lineHeight: 1 }}>ORACLE</div>
+            <div style={{ fontSize: 34, fontWeight: 900, letterSpacing: 8, color: 'var(--c)', lineHeight: 1 }}>BATTLE OF THE BRANDS</div>
             <div style={{ fontSize: 10, letterSpacing: 5, color: 'var(--t3)' }}>FIFA WORLD CUP 2026 · LIVE PREDICTION ARENA · CAN YOU BEAT THE AI?</div>
           </div>
         </div>

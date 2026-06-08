@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'ORACLE — World Cup 2026 Prediction Engine',
+  title: 'BATTLE OF THE BRANDS',
   description: 'Can you beat the AI? Predict World Cup 2026 match outcomes and challenge ORACLE.',
 };
 
