@@ -238,10 +238,10 @@ export default function ArenaPage() {
   return (
     <div style={{ width: '100vw', height: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ position: 'fixed', inset: 0, opacity: 0.03, pointerEvents: 'none', zIndex: 0, backgroundImage: 'linear-gradient(var(--c) 1px,transparent 1px),linear-gradient(90deg,var(--c) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'radial-gradient(ellipse at center,transparent 30%,rgba(2,8,18,0.8) 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'radial-gradient(ellipse at center,transparent 30%,var(--vignette) 100%)' }} />
 
       {/* Header */}
-      <div style={{ height: 64, flexShrink: 0, background: 'rgba(7,16,31,0.98)', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', position: 'relative', zIndex: 10 }}>
+      <div style={{ height: 64, flexShrink: 0, background: 'var(--header-bg)', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 38, height: 38, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', background: 'var(--c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#000' }}>O</div>
           <div>
@@ -270,7 +270,7 @@ export default function ArenaPage() {
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '290px 1fr 280px', minHeight: 0, position: 'relative', zIndex: 5 }}>
 
         {/* LEFT: fixture list */}
-        <div style={{ borderRight: '1px solid var(--b1)', background: 'rgba(7,16,31,0.8)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ borderRight: '1px solid var(--b1)', background: 'var(--sidebar-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', flexShrink: 0 }}>
             <div style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)', marginBottom: 2 }}>FIXTURES</div>
             <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1, color: 'var(--t1)' }}>
@@ -556,7 +556,7 @@ export default function ArenaPage() {
         </div>
 
         {/* RIGHT: Leaderboard */}
-        <div style={{ borderLeft: '1px solid var(--b1)', background: 'rgba(7,16,31,0.8)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ borderLeft: '1px solid var(--b1)', background: 'var(--sidebar-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <div style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)', marginBottom: 2 }}>GLOBAL RANKINGS</div>

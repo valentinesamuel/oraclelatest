@@ -3,31 +3,56 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,600;1,800&family=JetBrains+Mono:wght@400;600;700&display=swap');
 
 :root {
-  --bg:     #020812;
-  --bg2:    #07101f;
-  --bg3:    #0c1628;
-  --bg4:    #101e36;
-  --b1:     #162040;
-  --b2:     #1f2f55;
-  --b3:     #263660;
-
-  --c:      #00d4ff;
-  --c2:     #0090bb;
-  --c3:     #00ffa3;
-  --gold:   #ffd700;
-  --gold2:  #cc9900;
-  --red:    #ff4040;
-  --orange: #ff9500;
-  --green:  #00e676;
-  --purple: #c084fc;
-
-  --t1:     #dceeff;
-  --t2:     #7da8d8;
-  --t3:     #3a5880;
-
   --font-head: 'Barlow Condensed', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-body: 'Barlow Condensed', sans-serif;
+
+  --gold:    #ffd700;
+  --gold2:   #cc9900;
+  --red:     #ff4040;
+  --orange:  #ff9500;
+  --green:   #00e676;
+  --purple:  #c084fc;
+  --silver:  #b0b8c8;
+  --bronze:  #cd8e60;
+}
+
+:root, [data-theme="dark"] {
+  --bg:         #0a0a0a;
+  --bg2:        #111111;
+  --bg3:        #1a1a1a;
+  --bg4:        #222222;
+  --b1:         #2a2a2a;
+  --b2:         #333333;
+  --b3:         #3d3d3d;
+  --t1:         #f0f0f0;
+  --t2:         #a0a0a0;
+  --t3:         #666666;
+  --c:          #00c4f0;
+  --c2:         #0090bb;
+  --c3:         #00ffa3;
+  --sidebar-bg: rgba(17,17,17,0.85);
+  --header-bg:  rgba(10,10,10,0.98);
+  --vignette:   rgba(0,0,0,0.80);
+}
+
+[data-theme="light"] {
+  --bg:         #f5f7fa;
+  --bg2:        #eef1f5;
+  --bg3:        #e4eaf2;
+  --bg4:        #d8e2ee;
+  --b1:         #c8d8e8;
+  --b2:         #b0c8de;
+  --b3:         #98b8d4;
+  --t1:         #0d1f2d;
+  --t2:         #1e3a5a;
+  --t3:         #3a5070;
+  --c:          #0058a8;
+  --c2:         #004488;
+  --c3:         #007a52;
+  --sidebar-bg: rgba(238,241,245,0.95);
+  --header-bg:  rgba(245,247,250,0.98);
+  --vignette:   rgba(229,234,242,0.50);
 }
 
 *, *::before, *::after {

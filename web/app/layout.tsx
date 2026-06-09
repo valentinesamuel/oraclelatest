@@ -2,6 +2,7 @@
 
 import type { Metadata } from 'next';
 import './globals.css';
+import ThemeToggle from '../components/ThemeToggle';
 
 export const metadata: Metadata = {
   title: 'BATTLE OF THE BRANDS',
@@ -11,7 +12,22 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            try {
+              var saved = localStorage.getItem('theme') || 'dark';
+              document.documentElement.dataset.theme = saved;
+            } catch (e) {
+              document.documentElement.dataset.theme = 'dark';
+            }
+          })();
+        `}} />
+      </head>
+      <body>
+        <ThemeToggle />
+        {children}
+      </body>
     </html>
   );
 }

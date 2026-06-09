@@ -114,10 +114,10 @@ export default function WallPage() {
   return (
     <div style={{ width: '100vw', height: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ position: 'fixed', inset: 0, opacity: 0.03, pointerEvents: 'none', zIndex: 0, backgroundImage: 'linear-gradient(var(--c) 1px,transparent 1px),linear-gradient(90deg,var(--c) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'radial-gradient(ellipse at center,transparent 25%,rgba(2,8,18,0.85) 100%)' }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'radial-gradient(ellipse at center,transparent 25%,var(--vignette) 100%)' }} />
 
       {/* TOP BAR */}
-      <div style={{ height: 72, flexShrink: 0, background: 'rgba(7,16,31,0.98)', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', position: 'relative', zIndex: 10 }}>
+      <div style={{ height: 72, flexShrink: 0, background: 'var(--header-bg)', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ width: 46, height: 46, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', background: 'var(--c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: '#000' }}>O</div>
           <div>
@@ -151,7 +151,7 @@ export default function WallPage() {
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '300px 1fr 300px', minHeight: 0, position: 'relative', zIndex: 5 }}>
 
         {/* LEFT: Fixture list */}
-        <div style={{ borderRight: '1px solid var(--b1)', background: 'rgba(7,16,31,0.85)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ borderRight: '1px solid var(--b1)', background: 'var(--sidebar-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
             <span style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)' }}>FIXTURES &amp; SCORES</span>
           </div>
@@ -306,7 +306,7 @@ export default function WallPage() {
         </div>
 
         {/* RIGHT: Leaderboard */}
-        <div style={{ borderLeft: '1px solid var(--b1)', background: 'rgba(7,16,31,0.85)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ borderLeft: '1px solid var(--b1)', background: 'var(--sidebar-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
             <span style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)' }}>LIVE LEADERBOARD</span>
             <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', borderRadius: 3, background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: 'var(--c)' }}>
