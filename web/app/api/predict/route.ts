@@ -18,7 +18,9 @@ export async function POST(req: NextRequest) {
     firstScorer,
   } = body;
 
-  const fullEmail = (emailPrefix ?? "").trim().toLowerCase() + EMAIL_DOMAIN;
+  const rawPrefix = (emailPrefix ?? "").trim().toLowerCase();
+  const cleanPrefix = rawPrefix.includes('@') ? rawPrefix.split('@')[0] : rawPrefix;
+  const fullEmail = cleanPrefix + EMAIL_DOMAIN;
 
   const vpsRes = await fetch(`${VPS_BASE_URL}/api/predictions`, {
     method: "POST",

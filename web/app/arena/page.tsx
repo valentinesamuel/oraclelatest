@@ -381,9 +381,10 @@ export default function ArenaPage() {
                       style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--b2)', borderRadius: 6, padding: '10px 12px', color: 'var(--t1)', fontFamily: 'var(--font-head)', fontSize: 15, outline: 'none' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'block', marginBottom: 6 }}>EMAIL PREFIX <span style={{ color: 'var(--t3)' }}>@ng.ab-inbev.com</span></label>
+                    <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'block', marginBottom: 6 }}>EMAIL <span style={{ color: 'var(--t3)' }}>@ng.ab-inbev.com</span></label>
                     <input value={emailPrefix} onChange={e => setEmailPrefix(e.target.value)} placeholder="firstname.lastname"
                       style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--b2)', borderRadius: 6, padding: '10px 12px', color: 'var(--t1)', fontFamily: 'var(--font-head)', fontSize: 15, outline: 'none' }} />
+                    <div style={{ fontSize: 9, color: 'var(--t3)', marginTop: 4, letterSpacing: 0.5 }}>Use your official email: firstname.lastname@ng.ab-inbev.com</div>
                   </div>
                 </div>
                 <div>
