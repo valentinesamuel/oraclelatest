@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import Leaderboard from '../../components/Leaderboard';
 import type { Fixture, LeaderboardEntry } from '../../types';
 
@@ -119,7 +120,7 @@ export default function WallPage() {
       {/* TOP BAR */}
       <div style={{ height: 72, flexShrink: 0, background: 'var(--header-bg)', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 46, height: 46, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', background: 'var(--c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: '#000' }}>O</div>
+          <Image src="/ibplc-logo.png" alt="IBPLC" width={46} height={62} style={{ display: 'block' }} />
           <div>
             <div style={{ fontSize: 34, fontWeight: 900, letterSpacing: 8, color: 'var(--c)', lineHeight: 1 }}>BATTLE OF THE BRANDS</div>
             <div style={{ fontSize: 10, letterSpacing: 5, color: 'var(--t3)' }}>FIFA WORLD CUP 2026 · LIVE PREDICTION ARENA · CAN YOU BEAT THE AI?</div>
@@ -174,7 +175,7 @@ export default function WallPage() {
               </div>
             ))}
             {predictable.map(f => (
-              <div key={f.id} onClick={() => handleSelect(f.id)} style={{ padding: '10px 14px', borderBottom: '1px solid var(--b1)', borderLeft: `3px solid ${f.id === selectedId ? 'var(--c)' : 'transparent'}`, background: f.id === selectedId ? 'rgba(0,212,255,0.07)' : 'transparent', cursor: 'pointer' }}>
+              <div key={f.id} onClick={() => handleSelect(f.id)} style={{ padding: '10px 14px', borderBottom: '1px solid var(--b1)', borderLeft: `3px solid ${f.id === selectedId ? 'var(--c)' : 'transparent'}`, background: f.id === selectedId ? 'rgba(255,215,0,0.07)' : 'transparent', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                   <span style={{ fontSize: 9, color: 'var(--t3)' }}>{f.round ?? 'Group Stage'}</span>
                   <StatusBadge fixture={f} />
@@ -221,7 +222,7 @@ export default function WallPage() {
             const predict  = canPredict(selectedMatch);
             return (
               <>
-                <div style={{ position: 'absolute', fontSize: 280, fontWeight: 900, color: 'rgba(0,212,255,0.025)', letterSpacing: -20, userSelect: 'none', pointerEvents: 'none', lineHeight: 1, zIndex: 0 }}>
+                <div style={{ position: 'absolute', fontSize: 280, fontWeight: 900, color: 'rgba(255,215,0,0.025)', letterSpacing: -20, userSelect: 'none', pointerEvents: 'none', lineHeight: 1, zIndex: 0 }}>
                   {(live || finished)
                     ? `${selectedMatch.homeScore ?? 0}—${selectedMatch.awayScore ?? 0}`
                     : 'VS'}
@@ -282,7 +283,7 @@ export default function WallPage() {
                   </div>
 
                   {predict && (
-                    <div style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 6, padding: '10px 14px', textAlign: 'center' }}>
+                    <div style={{ background: 'rgba(255,215,0,0.05)', border: '1px solid rgba(255,215,0,0.2)', borderRadius: 6, padding: '10px 14px', textAlign: 'center' }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c)', marginBottom: 4 }}>PREDICTIONS OPEN</div>
                       <div style={{ fontSize: 11, color: 'var(--t2)' }}>Use a tablet to predict this match. Points awarded at Full Time against the real result.</div>
                     </div>
@@ -309,7 +310,7 @@ export default function WallPage() {
         <div style={{ borderLeft: '1px solid var(--b1)', background: 'var(--sidebar-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
             <span style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)' }}>LIVE LEADERBOARD</span>
-            <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', borderRadius: 3, background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: 'var(--c)' }}>
+            <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', borderRadius: 3, background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: 'var(--c)' }}>
               {leaderboard.length} PLAYERS
             </span>
           </div>
@@ -318,7 +319,7 @@ export default function WallPage() {
       </div>
 
       {/* CTA strip */}
-      <div style={{ flexShrink: 0, background: 'rgba(0,212,255,0.06)', borderTop: '1px solid rgba(0,212,255,0.2)', padding: '8px 28px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+      <div style={{ flexShrink: 0, background: 'rgba(255,215,0,0.06)', borderTop: '1px solid rgba(255,215,0,0.2)', padding: '8px 28px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
         <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: 3 }}>
           SCAN TO PREDICT <span style={{ color: 'var(--c)' }}>·</span> BEAT THE AI <span style={{ color: 'var(--c)' }}>·</span> POINTS AWARDED AT FULL TIME
         </div>

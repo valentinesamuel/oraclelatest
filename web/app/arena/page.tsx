@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
  
 import Ticker from '../../components/Ticker';
 import type { Fixture, LeaderboardEntry, OraclePrediction, Team } from '../../types';
@@ -198,7 +199,7 @@ export default function ArenaPage() {
       <div onClick={() => !locked && handleSelectMatch(fixture)} style={{
         padding: '10px 14px', borderBottom: '1px solid var(--b1)',
         borderLeft: `3px solid ${active ? 'var(--c)' : live ? 'var(--red)' : 'transparent'}`,
-        background: active ? 'rgba(0,212,255,0.07)' : live ? 'rgba(255,64,64,0.04)' : 'transparent',
+        background: active ? 'rgba(255,215,0,0.07)' : live ? 'rgba(255,64,64,0.04)' : 'transparent',
         cursor: locked ? 'default' : 'pointer', opacity: locked && !live ? 0.7 : 1,
         transition: 'all 0.2s',
       }}>
@@ -243,7 +244,7 @@ export default function ArenaPage() {
       {/* Header */}
       <div style={{ height: 64, flexShrink: 0, background: 'var(--header-bg)', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', position: 'relative', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 38, height: 38, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', background: 'var(--c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: '#000' }}>O</div>
+          <Image src="/ibplc-logo.png" alt="IBPLC" width={38} height={51} style={{ display: 'block' }} />
           <div>
             <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: 6, color: 'var(--c)', lineHeight: 1 }}>BATTLE OF THE BRANDS</div>
             <div style={{ fontSize: 9, letterSpacing: 4, color: 'var(--t3)' }}>PREDICTION ENGINE v4.1 · FIFA WORLD CUP 2026</div>
@@ -289,7 +290,7 @@ export default function ArenaPage() {
             )}
             {predictable.length > 0 && (
               <>
-                <div style={{ padding: '6px 14px', background: 'rgba(0,212,255,0.04)', fontSize: 8, letterSpacing: 3, color: 'var(--c)', borderBottom: '1px solid var(--b1)' }}>PREDICT NOW</div>
+                <div style={{ padding: '6px 14px', background: 'rgba(255,215,0,0.04)', fontSize: 8, letterSpacing: 3, color: 'var(--c)', borderBottom: '1px solid var(--b1)' }}>PREDICT NOW</div>
                 {predictable.map(f => <FixtureRow key={f.id} fixture={f} />)}
               </>
             )}
@@ -308,7 +309,9 @@ export default function ArenaPage() {
           {/* SELECT */}
           {view === 'select' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', gap: 28, textAlign: 'center' }}>
-              <div style={{ width: 76, height: 76, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', background: 'rgba(0,212,255,0.1)', border: '2px solid rgba(0,212,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, color: 'var(--c)', animation: 'pulse-glow 3s infinite' }}>O</div>
+              <div style={{ width: 76, height: 102, animation: 'pulse-glow 3s infinite', border: '2px solid rgba(255,215,0,0.3)', borderRadius: 8 }}>
+                <Image src="/ibplc-logo.png" alt="IBPLC" width={76} height={102} style={{ display: 'block', borderRadius: 6 }} />
+              </div>
               <div>
                 <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: 4, color: 'var(--c)', marginBottom: 10 }}>BOTB IS READY</div>
                 <div style={{ fontSize: 14, color: 'var(--t2)', lineHeight: 1.8, maxWidth: 400 }}>
@@ -365,7 +368,7 @@ export default function ArenaPage() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.12)', borderRadius: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(255,215,0,0.04)', border: '1px solid rgba(255,215,0,0.12)', borderRadius: 6 }}>
                   <span style={{ fontSize: 14 }}>🔒</span>
                   <span style={{ fontSize: 11, color: 'var(--t3)', letterSpacing: 1 }}>BOTB's prediction is sealed until you submit. Points awarded at Full Time.</span>
                 </div>
@@ -389,7 +392,7 @@ export default function ArenaPage() {
                     {(['Team Budweiser', 'Team Trophy'] as Team[]).map(t => (
                       <button key={t} onClick={() => setTeam(t)} style={{
                         padding: '10px', borderRadius: 6, cursor: 'pointer', fontFamily: 'var(--font-head)', fontSize: 13, fontWeight: 700, letterSpacing: 1,
-                        background: team === t ? 'rgba(0,212,255,0.12)' : 'var(--bg3)',
+                        background: team === t ? 'rgba(255,215,0,0.12)' : 'var(--bg3)',
                         border: `1px solid ${team === t ? 'var(--c)' : 'var(--b2)'}`,
                         color: team === t ? 'var(--c)' : 'var(--t2)',
                       }}>{t.toUpperCase()}</button>
@@ -429,7 +432,9 @@ export default function ArenaPage() {
           {/* LOADING */}
           {view === 'loading' && selectedMatch && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, padding: '2rem' }}>
-              <div style={{ width: 84, height: 84, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', background: 'rgba(0,212,255,0.12)', border: '2px solid var(--c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, fontWeight: 900, color: 'var(--c)', animation: 'pulse-glow 1s infinite' }}>O</div>
+              <div style={{ width: 84, height: 113, animation: 'pulse-glow 1s infinite', border: '2px solid var(--c)', borderRadius: 8 }}>
+                <Image src="/ibplc-logo.png" alt="IBPLC" width={84} height={113} style={{ display: 'block', borderRadius: 6 }} />
+              </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 12, letterSpacing: 4, color: 'var(--c)', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>ORACLE ENGAGED</div>
                 <div style={{ fontSize: 16, color: 'var(--t1)', marginBottom: 6 }}>{loadingMsg}</div>
@@ -491,7 +496,7 @@ export default function ArenaPage() {
                   </div>
                 )}
                 {revealStep >= 2 && (
-                  <div style={{ animation: 'slide-up 0.4s ease', background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ animation: 'slide-up 0.4s ease', background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.2)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
                     <div style={{ fontSize: 28 }}>⏳</div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c)', marginBottom: 4 }}>Prediction Locked In</div>
@@ -530,7 +535,7 @@ export default function ArenaPage() {
                   </div>
                 )}
                 {revealStep >= 4 && (
-                  <div style={{ animation: 'slide-up 0.4s ease', background: 'var(--bg2)', border: '1px solid rgba(0,212,255,0.2)', borderLeft: '3px solid var(--c)', borderRadius: 8, padding: '14px 18px' }}>
+                  <div style={{ animation: 'slide-up 0.4s ease', background: 'var(--bg2)', border: '1px solid rgba(255,215,0,0.2)', borderLeft: '3px solid var(--c)', borderRadius: 8, padding: '14px 18px' }}>
                     <div style={{ fontSize: 9, letterSpacing: 3, color: 'var(--c)', marginBottom: 8 }}>BOTB RESPONDS</div>
                     <div style={{ fontSize: 16, fontStyle: 'italic', color: 'var(--t1)', lineHeight: 1.6, marginBottom: 8 }}>&ldquo;{oracle.analyticalQuote}&rdquo;</div>
                     <div style={{ fontSize: 10, color: 'var(--t3)', letterSpacing: 2, fontFamily: 'var(--font-mono)' }}>
@@ -562,7 +567,7 @@ export default function ArenaPage() {
               <div style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)', marginBottom: 2 }}>GLOBAL RANKINGS</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>Leaderboard</div>
             </div>
-            <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', borderRadius: 3, background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: 'var(--c)' }}>
+            <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', borderRadius: 3, background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: 'var(--c)' }}>
               {leaderboard.length} PLAYERS
             </span>
           </div>

@@ -1,6 +1,7 @@
 // app/page.tsx — Home / navigation hub
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function HomePage() {
   return (
@@ -25,12 +26,7 @@ export default function HomePage() {
 
       {/* Logo */}
       <div style={{ textAlign: 'center', zIndex: 1 }}>
-        <div style={{
-          width: 64, height: 64, margin: '0 auto 16px',
-          clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
-          background: 'var(--c)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 24, fontWeight: 900, color: '#000',
-        }}>O</div>
+        <Image src="/ibplc-logo.png" alt="IBPLC" width={64} height={86} style={{ margin: '0 auto 16px', display: 'block' }} />
         <div style={{ fontSize: 52, fontWeight: 900, letterSpacing: 10, color: 'var(--c)', lineHeight: 1 }}>
           BATTLE OF THE BRANDS
         </div>
@@ -68,7 +64,7 @@ export default function HomePage() {
               ATTRACTION WALL
             </div>
             <div style={{ fontSize: 12, color: 'var(--t3)', lineHeight: 1.4 }}>
-              Large screen display. Auto-rotating fixtures, live leaderboard, broadcast mode.
+              Large screen display. Live leaderboard.
             </div>
           </div>
         </Link>
