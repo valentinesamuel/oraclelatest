@@ -20,7 +20,8 @@ interface Props {
 export default function Leaderboard({ leaderboard, maxRows = 12 }: Props) {
   const sorted = [...leaderboard].sort((a, b) => b.totalPoints - a.totalPoints).slice(0, maxRows);
 
-  const teamTotals: Record<string, number> = {};
+  const ALL_TEAMS: string[] = ['Team Budweiser', 'Team Trophy'];
+  const teamTotals: Record<string, number> = Object.fromEntries(ALL_TEAMS.map(t => [t, 0]));
   leaderboard.forEach(e => { teamTotals[e.team] = (teamTotals[e.team] || 0) + e.totalPoints; });
   const teamArr = Object.entries(teamTotals).sort((a, b) => b[1] - a[1]);
   const maxTeamPts = teamArr[0]?.[1] || 1;
@@ -64,7 +65,7 @@ export default function Leaderboard({ leaderboard, maxRows = 12 }: Props) {
         })}
       </div>
 
-      {teamArr.length > 0 && (
+      {(
         <div style={{ padding: '10px 14px', borderTop: '1px solid var(--b1)', flexShrink: 0 }}>
           <div style={{ fontSize: 9, letterSpacing: 3, color: 'var(--t3)', marginBottom: 8 }}>TEAM STANDINGS</div>
           {teamArr.map(([name, pts], i) => {
