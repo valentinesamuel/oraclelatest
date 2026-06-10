@@ -308,8 +308,8 @@ export default function ArenaPage() {
       {/* SELECT */}
       {view === 'select' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', gap: 28, textAlign: 'center' }}>
-          <div style={{ width: 76, height: 102, animation: 'pulse-glow 3s infinite', border: '2px solid rgba(255,215,0,0.3)', borderRadius: 8 }}>
-            <Image src="/ibplc-logo.png" alt="IBPLC" width={76} height={102} style={{ display: 'block', borderRadius: 6 }} />
+          <div style={{ width: 200, height: 68, animation: 'pulse-glow 3s infinite', border: '2px solid rgba(255,215,0,0.3)', borderRadius: 8 }}>
+            <Image src="/WORLD%20CUP%20CROPPED.png" alt="FIFA World Cup 2026" width={200} height={68} style={{ display: 'block', borderRadius: 6 }} />
           </div>
           <div>
             <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: 4, color: 'var(--c)', marginBottom: 10 }}>BOTB IS READY</div>

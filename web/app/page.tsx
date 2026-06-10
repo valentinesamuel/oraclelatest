@@ -25,7 +25,7 @@ export default function HomePage() {
 
       {/* Logo */}
       <div style={{ textAlign: 'center', zIndex: 1 }}>
-        <Image src="/budweiser.png" alt="Budweiser" width={320} height={134} style={{ margin: '0 auto 24px', display: 'block', maxWidth: '80vw', height: 'auto' }} />
+        <Image src="/WORLD%20CUP%20CROPPED.png" alt="FIFA World Cup 2026" width={320} height={110} style={{ margin: '0 auto 24px', display: 'block', maxWidth: '80vw', height: 'auto' }} />
         <div className="title-xl" style={{ fontWeight: 900, color: 'var(--c)', lineHeight: 1 }}>
           BATTLE OF THE BRANDS
         </div>
