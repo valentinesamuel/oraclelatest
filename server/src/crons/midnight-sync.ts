@@ -12,7 +12,7 @@ export async function runDailySync(
   triggeredBy: "cron" | "manual" = "cron",
   requestId?: string,
 ): Promise<{ fixtures: number; jobs: number }> {
-  const today = formatDate(new Date("2022-12-18"));
+  const today = formatDate(new Date());
   const log = syncLogger.child({
     triggeredBy,
     ...(requestId ? { requestId } : {}),
@@ -26,30 +26,33 @@ export async function runDailySync(
   let jobCount = 0;
 
   for (const f of fixtures) {
-    await db.insert(fixture).values({
-      id: f.id,
-      name: f.name,
-      startingAt: f.startingAt,
-      homeTeamName: f.homeTeamName,
-      homeFlagUrl: f.homeFlagUrl,
-      awayTeamName: f.awayTeamName,
-      awayFlagUrl: f.awayFlagUrl,
-      leagueId: f.leagueId,
-      seasonId: f.seasonId,
-      stateId: f.stateId,
-      round: f.round,
-      status: f.status as any,
-      rawSportmonksData: f.rawSportmonksData as any,
-    }).onConflictDoUpdate({
-      target: fixture.id,
-      set: {
+    await db
+      .insert(fixture)
+      .values({
+        id: f.id,
         name: f.name,
         startingAt: f.startingAt,
+        homeTeamName: f.homeTeamName,
+        homeFlagUrl: f.homeFlagUrl,
+        awayTeamName: f.awayTeamName,
+        awayFlagUrl: f.awayFlagUrl,
+        leagueId: f.leagueId,
+        seasonId: f.seasonId,
         stateId: f.stateId,
+        round: f.round,
         status: f.status as any,
         rawSportmonksData: f.rawSportmonksData as any,
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: fixture.id,
+        set: {
+          name: f.name,
+          startingAt: f.startingAt,
+          stateId: f.stateId,
+          status: f.status as any,
+          rawSportmonksData: f.rawSportmonksData as any,
+        },
+      });
     fixtureCount++;
 
     const processAt = new Date(
