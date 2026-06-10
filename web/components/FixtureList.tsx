@@ -18,14 +18,14 @@ export default function FixtureList({ fixtures, selectedId, onSelect }: Props) {
           <div key={f.id} onClick={() => onSelect(f.id)} style={{
             padding: '12px 14px', borderBottom: '1px solid var(--b1)',
             borderLeft: `3px solid ${active ? 'var(--c)' : 'transparent'}`,
-            background: active ? 'rgba(0,212,255,0.07)' : 'transparent',
+            background: active ? 'rgba(255,215,0,0.07)' : 'transparent',
             cursor: 'pointer', transition: 'all 0.2s',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
               <span style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)' }}>
                 {f.round ?? 'Group Stage'}
               </span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--c)', background: 'rgba(0,212,255,0.1)', padding: '1px 6px', borderRadius: 2 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--c)', background: 'rgba(255,215,0,0.1)', padding: '1px 6px', borderRadius: 2 }}>
                 {kickoff.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} WAT
               </span>
             </div>
@@ -41,7 +41,7 @@ export default function FixtureList({ fixtures, selectedId, onSelect }: Props) {
                 : <span style={{ fontSize: 18, lineHeight: 1 }}>🏳</span>}
             </div>
             {active && (
-              <span style={{ fontSize: 8, letterSpacing: 1, color: 'var(--c)', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', padding: '1px 5px', borderRadius: 2 }}>
+              <span style={{ fontSize: 8, letterSpacing: 1, color: 'var(--c)', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', padding: '1px 5px', borderRadius: 2 }}>
                 SELECTED
               </span>
             )}

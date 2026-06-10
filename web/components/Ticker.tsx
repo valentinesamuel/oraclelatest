@@ -8,13 +8,11 @@ interface Props {
 
 export default function Ticker({ topPlayer, topPts, totalPreds }: Props) {
   const items = [
-    'ORACLE ACCURACY: 94.3% HISTORICAL · 2.1M+ SIMULATIONS TODAY',
     topPlayer ? `TOP PREDICTOR: ${topPlayer} — ${topPts} PTS` : null,
     '⚡ UPSET ALERT: Morocco 56% to defeat Germany',
     '⚡ CHAOS MODE: Japan vs Italy — 52% upset probability',
     totalPreds ? `TOTAL PREDICTIONS TODAY: ${totalPreds}` : null,
-    'ORACLE processes real-time data: form index · weather · squad fitness · tactical DNA · xG',
-    'GRAND PRIZE: BEAT THE AI CHAMPION TROPHY — CEREMONY AT 17:00',
+    'GRAND PRIZE: BEAT THE BOTB CHAMPION TROPHY — CEREMONY AT 17:00',
     'SCAN THE QR CODE NOW TO CHALLENGE ORACLE',
   ].filter((item): item is string => item !== null);
 

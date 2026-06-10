@@ -1,12 +1,12 @@
 // app/page.tsx — Home / navigation hub
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function HomePage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--bg)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -25,22 +25,17 @@ export default function HomePage() {
 
       {/* Logo */}
       <div style={{ textAlign: 'center', zIndex: 1 }}>
-        <div style={{
-          width: 64, height: 64, margin: '0 auto 16px',
-          clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
-          background: 'var(--c)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 24, fontWeight: 900, color: '#000',
-        }}>O</div>
-        <div style={{ fontSize: 52, fontWeight: 900, letterSpacing: 10, color: 'var(--c)', lineHeight: 1 }}>
+        <Image src="/WORLD%20CUP%20CROPPED.png" alt="FIFA World Cup 2026" width={320} height={110} style={{ margin: '0 auto 24px', display: 'block', maxWidth: '80vw', height: 'auto' }} />
+        <div className="title-xl" style={{ fontWeight: 900, color: 'var(--c)', lineHeight: 1 }}>
           BATTLE OF THE BRANDS
         </div>
         <div style={{ fontSize: 12, letterSpacing: 5, color: 'var(--t3)', marginTop: 8 }}>
-          FIFA WORLD CUP 2026 · AI PREDICTION ENGINE
+          FIFA WORLD CUP 2026 · PREDICTION ENGINE
         </div>
       </div>
 
       {/* Route cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, width: '100%', maxWidth: 560, zIndex: 1 }}>
+      <div className="resp-grid-1col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, width: '100%', maxWidth: 560, zIndex: 1 }}>
         <Link href="/arena" style={{ textDecoration: 'none' }}>
           <div style={{
             background: 'var(--bg2)', border: '1px solid var(--b2)', borderRadius: 8,
@@ -52,7 +47,7 @@ export default function HomePage() {
               PREDICTION ARENA
             </div>
             <div style={{ fontSize: 12, color: 'var(--t3)', lineHeight: 1.4 }}>
-              Kiosk / tablet view. Submit predictions, earn points.
+              Submit predictions, earn points.
             </div>
           </div>
         </Link>
@@ -68,13 +63,13 @@ export default function HomePage() {
               ATTRACTION WALL
             </div>
             <div style={{ fontSize: 12, color: 'var(--t3)', lineHeight: 1.4 }}>
-              Large screen display. Auto-rotating fixtures, live leaderboard, broadcast mode.
+              Large screen display. Live leaderboard.
             </div>
           </div>
         </Link>
       </div>
 
-      <div style={{ fontSize: 11, color: 'var(--t3)', letterSpacing: 3, zIndex: 1 }}>
+      <div className="resp-hide-mobile" style={{ fontSize: 11, color: 'var(--t3)', letterSpacing: 3, zIndex: 1 }}>
         OPEN /arena ON TABLETS · /wall ON THE BIG SCREEN
       </div>
     </div>

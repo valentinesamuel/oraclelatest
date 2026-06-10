@@ -19,5 +19,4 @@ export const tickerLogger      = logger.child({ service: 'ticker' });
 export const pollerLogger      = logger.child({ service: 'poller' });
 export const syncLogger        = logger.child({ service: 'sync' });
 export const scoringLogger     = logger.child({ service: 'scoring' });
-export const claudeLogger      = logger.child({ service: 'claude' });
 export const sportmonksLogger  = logger.child({ service: 'sportmonks' });

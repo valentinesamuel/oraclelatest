@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { eq, and } from 'drizzle-orm';
 import { db } from '../lib/db';
 import { fixture, prediction } from '../db/schema';
-import { buildEmail, validateEmailDomain } from '../utils/email';
+import { buildEmail, validateEmailDomain, extractEmailLocalPart, validatePrefixFormat } from '../utils/email';
 import { predictionsLogger } from '../lib/logger';
 
 export const predictionsRouter = Router();
@@ -43,7 +43,20 @@ const VALID_TEAMS = ['Team Budweiser', 'Team Trophy'];
 predictionsRouter.post('/', globalLimiter, perEmailLimiter, async (req: Request, res: Response): Promise<void> => {
   const body = req.body as PredictionBody;
 
-  const email = buildEmail(body.emailPrefix ?? '');
+  const rawPrefix = (body.emailPrefix ?? '').trim();
+  const localPart = extractEmailLocalPart(rawPrefix);
+
+  if (localPart === null) {
+    res.status(400).json({ error: 'Invalid email domain. Use your official @ng.ab-inbev.com address.' });
+    return;
+  }
+
+  if (!validatePrefixFormat(localPart)) {
+    res.status(400).json({ error: 'Email must be in firstname.lastname format (e.g. john.doe@ng.ab-inbev.com).' });
+    return;
+  }
+
+  const email = buildEmail(localPart);
   if (!validateEmailDomain(email)) {
     res.status(400).json({ error: 'Invalid email format. Must be yourname@ng.ab-inbev.com' });
     return;
