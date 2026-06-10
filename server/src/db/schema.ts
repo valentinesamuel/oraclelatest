@@ -4,11 +4,9 @@ import {
   integer,
   serial,
   varchar,
-  text,
   boolean,
   timestamp,
   jsonb,
-  doublePrecision,
   unique,
   index,
 } from 'drizzle-orm/pg-core';
@@ -44,7 +42,6 @@ export const fixture = pgTable('Fixture', {
   seasonId: integer('seasonId').notNull(),
   stateId: integer('stateId').notNull(),
   round: varchar('round'),
-  aiPreview: text('aiPreview'),
   rawSportmonksData: jsonb('rawSportmonksData'),
   createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
 });
@@ -104,24 +101,3 @@ export const jobQueue = pgTable(
   }),
 );
 
-export const oraclePrediction = pgTable(
-  'OraclePrediction',
-  {
-    id: serial('id').primaryKey(),
-    fixtureId: integer('fixtureId').notNull().references(() => fixture.id),
-    homeScore: integer('homeScore').notNull(),
-    awayScore: integer('awayScore').notNull(),
-    confidencePercentage: integer('confidencePercentage').notNull(),
-    expectedGoalsHome: doublePrecision('expectedGoalsHome').notNull(),
-    expectedGoalsAway: doublePrecision('expectedGoalsAway').notNull(),
-    analyticalQuote: text('analyticalQuote').notNull(),
-    analyticalDriver: varchar('analyticalDriver').notNull(),
-    simulationsRun: varchar('simulationsRun').notNull(),
-    upsetProbability: integer('upsetProbability').notNull(),
-    oracleVerdict: varchar('oracleVerdict').notNull(),
-    generatedAt: timestamp('generatedAt', { mode: 'date' }).defaultNow().notNull(),
-  },
-  (table) => ({
-    fixtureIdUnique: unique('oraclePrediction_fixtureId_unique').on(table.fixtureId),
-  }),
-);

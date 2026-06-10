@@ -123,7 +123,7 @@ export default function WallPage() {
           <Image src="/ibplc-logo.png" alt="IBPLC" width={46} height={62} style={{ display: 'block' }} />
           <div>
             <div style={{ fontSize: 34, fontWeight: 900, letterSpacing: 8, color: 'var(--c)', lineHeight: 1 }}>BATTLE OF THE BRANDS</div>
-            <div style={{ fontSize: 10, letterSpacing: 5, color: 'var(--t3)' }}>FIFA WORLD CUP 2026 · LIVE PREDICTION ARENA · CAN YOU BEAT THE AI?</div>
+            <div style={{ fontSize: 10, letterSpacing: 5, color: 'var(--t3)' }}>FIFA WORLD CUP 2026 · LIVE PREDICTION ARENA · CAN YOU BEAT THE BOTB?</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -321,7 +321,7 @@ export default function WallPage() {
       {/* CTA strip */}
       <div style={{ flexShrink: 0, background: 'rgba(255,215,0,0.06)', borderTop: '1px solid rgba(255,215,0,0.2)', padding: '8px 28px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
         <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: 3 }}>
-          SCAN TO PREDICT <span style={{ color: 'var(--c)' }}>·</span> BEAT THE AI <span style={{ color: 'var(--c)' }}>·</span> POINTS AWARDED AT FULL TIME
+          SCAN TO PREDICT <span style={{ color: 'var(--c)' }}>·</span> BEAT THE BOTB <span style={{ color: 'var(--c)' }}>·</span> POINTS AWARDED AT FULL TIME
         </div>
         <div style={{ width: 1, height: 24, background: 'var(--b2)' }} />
         <div style={{ display: 'flex', gap: 14 }}>
@@ -337,7 +337,7 @@ export default function WallPage() {
       {/* Ticker */}
       <div style={{ flexShrink: 0, height: 40, background: 'var(--bg2)', borderTop: '1px solid var(--b1)', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
         <div style={{ padding: '0 16px', height: '100%', display: 'flex', alignItems: 'center', borderRight: '1px solid var(--b1)', fontSize: 9, letterSpacing: 3, color: 'var(--c)', fontWeight: 700, whiteSpace: 'nowrap' }}>
-          ORACLE LIVE FEED
+          BOTB LIVE FEED
         </div>
         <div style={{ flex: 1, overflow: 'hidden', height: '100%', display: 'flex', alignItems: 'center' }}>
           <div style={{ whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t3)', animation: 'ticker-scroll 60s linear infinite', display: 'inline-block' }}>
@@ -347,8 +347,8 @@ export default function WallPage() {
                 ...finishedFixtures.map(f => `FT: ${f.homeTeamName.toUpperCase()} ${f.homeScore}–${f.awayScore} ${f.awayTeamName.toUpperCase()}`),
                 ...predictable.slice(0,4).map(f => `NEXT: ${f.homeTeamName.toUpperCase()} vs ${f.awayTeamName.toUpperCase()} · ${new Date(f.startingAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ${new Date(f.startingAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} WAT`),
                 topPlayer ? `TOP PREDICTOR: ${topPlayer.name} — ${topPlayer.totalPoints} PTS` : null,
-                'ORACLE AI PREDICTION ENGINE · Points awarded automatically at Full Time',
-                'GRAND PRIZE: BEAT THE AI CHAMPION TROPHY · END OF DAY CEREMONY',
+                'ORACLE PREDICTION ENGINE · Points awarded automatically at Full Time',
+                'GRAND PRIZE: BEAT THE BOTB CHAMPION TROPHY · END OF DAY CEREMONY',
               ].filter(Boolean).join('   ·   ');
               return items + '   ·   ' + items;
             })()}

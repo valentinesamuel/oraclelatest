@@ -1,5 +1,4 @@
 export type MatchStatus = 'NOT_STARTED' | 'LIVE' | 'FINISHED' | 'POSTPONED' | 'VOID';
-export type OracleVerdict = 'HOME_WIN' | 'AWAY_WIN' | 'DRAW';
 export type Team = 'Team Budweiser' | 'Team Trophy';
 
 export interface Fixture {
@@ -14,21 +13,6 @@ export interface Fixture {
   awayScore: number | null;
   status: MatchStatus;
   round: string | null;
-  aiPreview: string | null;
-}
-
-export interface OraclePrediction {
-  fixtureId: number;
-  homeScore: number;
-  awayScore: number;
-  confidencePercentage: number;
-  expectedGoalsHome: number;
-  expectedGoalsAway: number;
-  analyticalQuote: string;
-  analyticalDriver: string;
-  simulationsRun: string;
-  upsetProbability: number;
-  oracleVerdict: OracleVerdict;
 }
 
 export interface LeaderboardEntry {
@@ -44,7 +28,3 @@ export interface TeamStanding {
   totalPoints: number;
 }
 
-export interface PredictResponse {
-  oracle: OraclePrediction;
-  fixture: Fixture;
-}

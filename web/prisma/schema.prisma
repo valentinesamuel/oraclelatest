@@ -39,11 +39,9 @@ model Fixture {
   seasonId            Int
   stateId             Int
   round               String?
-  aiPreview           String?
   rawSportmonksData   Json?
   predictions         Prediction[]
   jobQueue            JobQueue?
-  oraclePrediction    OraclePrediction?
   createdAt           DateTime          @default(now())
 }
 
@@ -90,19 +88,3 @@ model JobQueue {
   fixture     Fixture   @relation(fields: [fixtureId], references: [id])
 }
 
-model OraclePrediction {
-  id                   Int      @id @default(autoincrement())
-  fixtureId            Int      @unique
-  homeScore            Int
-  awayScore            Int
-  confidencePercentage Int
-  expectedGoalsHome    Float
-  expectedGoalsAway    Float
-  analyticalQuote      String
-  analyticalDriver     String
-  simulationsRun       String
-  upsetProbability     Int
-  oracleVerdict        String
-  generatedAt          DateTime @default(now())
-  fixture              Fixture  @relation(fields: [fixtureId], references: [id])
-}

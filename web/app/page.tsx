@@ -31,7 +31,7 @@ export default function HomePage() {
           BATTLE OF THE BRANDS
         </div>
         <div style={{ fontSize: 12, letterSpacing: 5, color: 'var(--t3)', marginTop: 8 }}>
-          FIFA WORLD CUP 2026 · AI PREDICTION ENGINE
+          FIFA WORLD CUP 2026 · PREDICTION ENGINE
         </div>
       </div>
 

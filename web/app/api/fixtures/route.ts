@@ -10,7 +10,7 @@ export async function GET() {
       homeTeamName: true, homeFlagUrl: true,
       awayTeamName: true, awayFlagUrl: true,
       homeScore: true, awayScore: true,
-      status: true, round: true, aiPreview: true,
+      status: true, round: true,
     },
   });
   return NextResponse.json({ fixtures }, { headers: { 'Cache-Control': 'no-store' } });

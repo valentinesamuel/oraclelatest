@@ -1,9 +1,8 @@
 import cron from "node-cron";
 import { eq } from "drizzle-orm";
 import { db } from "../lib/db";
-import { fixture, oraclePrediction, jobQueue } from "../db/schema";
+import { fixture, jobQueue } from "../db/schema";
 import { fetchFixturesForDate } from "../lib/sportmonks";
-import { generateOraclePrediction } from "../lib/claude";
 import { syncLogger } from "../lib/logger";
 import { formatDate } from "../utils/date";
 
@@ -52,53 +51,6 @@ export async function runDailySync(
       },
     });
     fixtureCount++;
-
-    const [oracleExists] = await db
-      .select({ id: oraclePrediction.id })
-      .from(oraclePrediction)
-      .where(eq(oraclePrediction.fixtureId, f.id))
-      .limit(1);
-
-    if (!oracleExists) {
-      const oracle = await generateOraclePrediction(
-        f.homeTeamName,
-        f.awayTeamName,
-      );
-
-      if (oracle === null) {
-        log.warn({ fixtureId: f.id }, 'Oracle prediction skipped: credits exhausted');
-      } else {
-        await db.insert(oraclePrediction).values({
-          fixtureId: f.id,
-          homeScore: oracle.homeScore,
-          awayScore: oracle.awayScore,
-          confidencePercentage: oracle.confidencePercentage,
-          expectedGoalsHome: oracle.expectedGoalsHome,
-          expectedGoalsAway: oracle.expectedGoalsAway,
-          analyticalQuote: oracle.analyticalQuote,
-          analyticalDriver: oracle.analyticalDriver,
-          simulationsRun: oracle.simulationsRun,
-          upsetProbability: oracle.upsetProbability,
-          oracleVerdict: oracle.oracleVerdict,
-        });
-        await db.update(fixture)
-          .set({ aiPreview: oracle.analyticalQuote })
-          .where(eq(fixture.id, f.id));
-        log.info(
-          {
-            fixtureId: f.id,
-            verdict: oracle.oracleVerdict,
-            confidence: oracle.confidencePercentage,
-          },
-          "Oracle prediction generated",
-        );
-      }
-    } else {
-      log.debug(
-        { fixtureId: f.id },
-        "Oracle prediction already exists, skipping",
-      );
-    }
 
     const processAt = new Date(
       f.kickoffTimestamp * 1000 + PROCESS_AT_OFFSET_MS,

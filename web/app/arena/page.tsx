@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
  
 import Ticker from '../../components/Ticker';
-import type { Fixture, LeaderboardEntry, OraclePrediction, Team } from '../../types';
+import type { Fixture, LeaderboardEntry, Team } from '../../types';
 import Leaderboard from '../../components/Leaderboard';
 
 type View = 'select' | 'predict' | 'loading' | 'reveal';
@@ -79,15 +79,12 @@ export default function ArenaPage() {
   const [homeScore, setHomeScore]         = useState(1);
   const [awayScore, setAwayScore]         = useState(1);
   const [firstScorer, setFirstScorer]     = useState('');
-  const [oracle, setOracle]               = useState<OraclePrediction | null>(null);
   const [resultFixture, setResultFixture] = useState<Fixture | null>(null);
   const [loadingMsg, setLoadingMsg]       = useState('');
   const [revealStep, setRevealStep]       = useState(0);
   const [leaderboard, setLeaderboard]     = useState<LeaderboardEntry[]>([]);
   const [oracleStatus, setOracleStatus]   = useState('AWAITING PREDICTIONS');
   const [fixturesLoading, setFixturesLoading] = useState(true);
-
-  const simCount = useCountUp(1_400_000, view === 'reveal' && revealStep >= 3);
 
   const liveFixtures     = fixtures.filter(isLive);
   const predictable      = fixtures.filter(canPredict).sort((a, b) => new Date(a.startingAt).getTime() - new Date(b.startingAt).getTime());
@@ -126,8 +123,8 @@ export default function ArenaPage() {
   useEffect(() => {
     const msgs: Record<View, string[]> = {
       select:  ['AWAITING PREDICTIONS', 'SELECT A FIXTURE'],
-      predict: ['READY TO ANALYZE', 'AWAITING YOUR PICK', 'xG MODEL ON STANDBY'],
-      loading: ['ANALYZING...', 'RUNNING SIMULATIONS...', 'COMPUTING xG...', 'GENERATING PREDICTION...'],
+      predict: ['READY TO ANALYZE', 'AWAITING YOUR PICK'],
+      loading: ['LOCKING IN YOUR PREDICTION...', 'REGISTERING ENTRY...', 'ALMOST DONE...'],
       reveal:  ['PREDICTION SEALED', 'LOCKED IN', 'AWAITING FULL TIME'],
     };
     let i = 0; const list = msgs[view]; setOracleStatus(list[0]);
@@ -137,14 +134,13 @@ export default function ArenaPage() {
 
   useEffect(() => {
     if (view !== 'reveal') { setRevealStep(0); return; }
-    const timers = [80, 550, 1050, 1700].map((d, i) => setTimeout(() => setRevealStep(i + 1), d));
+    const timers = [80, 550, 1050].map((d, i) => setTimeout(() => setRevealStep(i + 1), d));
     return () => timers.forEach(clearTimeout);
   }, [view]);
 
   const handleSelectMatch = (fixture: Fixture) => {
     if (!canPredict(fixture)) return;
     setSelectedMatch(fixture);
-    setOracle(null);
     setResultFixture(null);
     setRevealStep(0);
     setView('predict');
@@ -153,7 +149,7 @@ export default function ArenaPage() {
   const handleSubmit = async () => {
     if (!userName.trim() || !emailPrefix.trim() || !selectedMatch) return;
     setView('loading');
-    const msgs = ['Locking in your prediction...', 'ORACLE consulting 1.4M simulations...', 'Calculating xG differential...', 'Sealing ORACLE\'s prediction...'];
+    const msgs = ['Locking in your prediction...', 'Registering your entry...', 'Almost done...'];
     let mi = 0; setLoadingMsg(msgs[0]);
     const msgTimer = setInterval(() => { mi = Math.min(mi + 1, msgs.length - 1); setLoadingMsg(msgs[mi]); }, 1300);
     try {
@@ -176,7 +172,6 @@ export default function ArenaPage() {
         setView('predict');
         return;
       }
-      setOracle(data.oracle);
       setResultFixture(data.fixture);
       await fetchLeaderboard();
       clearInterval(msgTimer);
@@ -437,62 +432,31 @@ export default function ArenaPage() {
                 <Image src="/ibplc-logo.png" alt="IBPLC" width={84} height={113} style={{ display: 'block', borderRadius: 6 }} />
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 12, letterSpacing: 4, color: 'var(--c)', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>ORACLE ENGAGED</div>
+                <div style={{ fontSize: 12, letterSpacing: 4, color: 'var(--c)', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>LOCKING IN YOUR PREDICTION</div>
                 <div style={{ fontSize: 16, color: 'var(--t1)', marginBottom: 6 }}>{loadingMsg}</div>
                 <div style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--font-mono)' }}>{selectedMatch.homeTeamName} vs {selectedMatch.awayTeamName}</div>
-              </div>
-              <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {[['xG MODEL','var(--c)'],['TACTICAL DNA','var(--c3)'],['FORM INDEX','var(--orange)'],['SQUAD DEPTH','var(--gold)']].map(([label,color]) => (
-                  <div key={label as string} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', width: 90 }}>{label}</div>
-                    <div style={{ flex: 1, height: 4, background: 'var(--b1)', borderRadius: 2, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', background: color as string, borderRadius: 2, width: '70%', animation: 'pulse-dot 1.2s infinite' }} />
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           )}
 
           {/* REVEAL */}
-          {view === 'reveal' && oracle && (resultFixture ?? selectedMatch) && (() => {
+          {view === 'reveal' && (resultFixture ?? selectedMatch) && (() => {
             const fix = resultFixture ?? selectedMatch!;
-            const xgHome = oracle.expectedGoalsHome;
-            const xgAway = oracle.expectedGoalsAway;
-            const xgTot  = xgHome + xgAway || 1;
             return (
               <div style={{ flex: 1, overflowY: 'auto', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {revealStep >= 1 && (
                   <div style={{ animation: 'slide-up 0.4s ease', background: 'var(--bg2)', border: '1px solid var(--b2)', borderRadius: 10, padding: '16px 20px' }}>
                     <div style={{ fontSize: 9, letterSpacing: 4, color: 'var(--t3)', marginBottom: 12 }}>{fix.round ?? 'Group Stage'} · PREDICTION SEALED</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12 }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 10, letterSpacing: 3, color: 'var(--t3)', marginBottom: 10 }}>YOUR PREDICTION</div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
-                          <FlagImg url={fix.homeFlagUrl} alt={fix.homeTeamName} />
-                          <span style={{ fontSize: 46, fontWeight: 900, color: 'var(--t1)', letterSpacing: -2, lineHeight: 1 }}>{homeScore}</span>
-                          <span style={{ fontSize: 22, color: 'var(--t3)', fontWeight: 300 }}>—</span>
-                          <span style={{ fontSize: 46, fontWeight: 900, color: 'var(--t1)', letterSpacing: -2, lineHeight: 1 }}>{awayScore}</span>
-                          <FlagImg url={fix.awayFlagUrl} alt={fix.awayTeamName} />
-                        </div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t2)' }}>{userName}</div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 10, letterSpacing: 3, color: 'var(--t3)', marginBottom: 10 }}>YOUR PREDICTION</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
+                        <FlagImg url={fix.homeFlagUrl} alt={fix.homeTeamName} />
+                        <span style={{ fontSize: 46, fontWeight: 900, color: 'var(--t1)', letterSpacing: -2, lineHeight: 1 }}>{homeScore}</span>
+                        <span style={{ fontSize: 22, color: 'var(--t3)', fontWeight: 300 }}>—</span>
+                        <span style={{ fontSize: 46, fontWeight: 900, color: 'var(--t1)', letterSpacing: -2, lineHeight: 1 }}>{awayScore}</span>
+                        <FlagImg url={fix.awayFlagUrl} alt={fix.awayTeamName} />
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                        <div style={{ width: 1, height: 36, background: 'var(--b2)' }} />
-                        <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)' }}>VS</div>
-                        <div style={{ width: 1, height: 36, background: 'var(--b2)' }} />
-                      </div>
-                      <div style={{ textAlign: 'center', opacity: revealStep >= 2 ? 1 : 0, transition: 'opacity 0.7s ease 0.2s' }}>
-                        <div style={{ fontSize: 10, letterSpacing: 3, color: 'var(--c)', marginBottom: 10 }}>ORACLE PREDICTS</div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
-                          <FlagImg url={fix.homeFlagUrl} alt={fix.homeTeamName} />
-                          <span style={{ fontSize: 46, fontWeight: 900, color: 'var(--c)', letterSpacing: -2, lineHeight: 1 }}>{oracle.homeScore}</span>
-                          <span style={{ fontSize: 22, color: 'var(--t3)', fontWeight: 300 }}>—</span>
-                          <span style={{ fontSize: 46, fontWeight: 900, color: 'var(--c)', letterSpacing: -2, lineHeight: 1 }}>{oracle.awayScore}</span>
-                          <FlagImg url={fix.awayFlagUrl} alt={fix.awayTeamName} />
-                        </div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c)' }}>ORACLE</div>
-                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t2)' }}>{userName}</div>
                     </div>
                   </div>
                 )}
@@ -500,7 +464,7 @@ export default function ArenaPage() {
                   <div style={{ animation: 'slide-up 0.4s ease', background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.2)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
                     <div style={{ fontSize: 28 }}>⏳</div>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c)', marginBottom: 4 }}>Prediction Locked In</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c)', marginBottom: 4 }}>Prediction Locked In!</div>
                       <div style={{ fontSize: 12, color: 'var(--t2)', lineHeight: 1.5 }}>
                         Points are awarded automatically when the match reaches Full Time.<br />
                         Kick-off: <strong style={{ color: 'var(--t1)' }}>{new Date(fix.startingAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {new Date(fix.startingAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} WAT</strong>
@@ -509,48 +473,12 @@ export default function ArenaPage() {
                   </div>
                 )}
                 {revealStep >= 3 && (
-                  <div style={{ animation: 'slide-up 0.4s ease', background: 'var(--bg2)', border: '1px solid var(--b1)', borderRadius: 8, padding: '14px 16px' }}>
-                    <div style={{ fontSize: 9, letterSpacing: 3, color: 'var(--t3)', marginBottom: 10 }}>BOTB'S PRE-MATCH ANALYSIS</div>
-                    {[
-                      { label: fix.homeTeamName.substring(0,3).toUpperCase(), val: xgHome, color: 'var(--c)' },
-                      { label: fix.awayTeamName.substring(0,3).toUpperCase(), val: xgAway, color: 'var(--c2)' },
-                    ].map(({ label, val, color }, i) => (
-                      <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, width: 42, color: 'var(--t2)' }}>{label}</div>
-                        <AnimatedBar pct={(val / xgTot) * 100} color={color} delay={i * 250} />
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t2)', width: 28, textAlign: 'right' }}>{val.toFixed(1)}</div>
-                      </div>
-                    ))}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginTop: 10 }}>
-                      {[
-                        { val: `${oracle.confidencePercentage}%`, label: 'CONFIDENCE', c: 'var(--c)' },
-                        { val: `${oracle.upsetProbability}%`, label: 'UPSET PROB', c: 'var(--orange)' },
-                        { val: `${(simCount / 1_000_000).toFixed(1)}M`, label: 'SIMULATIONS', c: 'var(--c3)' },
-                      ].map(({ val, label, c }) => (
-                        <div key={label} style={{ background: 'var(--bg3)', border: '1px solid var(--b1)', borderRadius: 6, padding: '8px', textAlign: 'center' }}>
-                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 17, fontWeight: 600, color: c, lineHeight: 1 }}>{val}</div>
-                          <div style={{ fontSize: 8, letterSpacing: 2, color: 'var(--t3)', marginTop: 3 }}>{label}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {revealStep >= 4 && (
-                  <div style={{ animation: 'slide-up 0.4s ease', background: 'var(--bg2)', border: '1px solid rgba(255,215,0,0.2)', borderLeft: '3px solid var(--c)', borderRadius: 8, padding: '14px 18px' }}>
-                    <div style={{ fontSize: 9, letterSpacing: 3, color: 'var(--c)', marginBottom: 8 }}>BOTB RESPONDS</div>
-                    <div style={{ fontSize: 16, fontStyle: 'italic', color: 'var(--t1)', lineHeight: 1.6, marginBottom: 8 }}>&ldquo;{oracle.analyticalQuote}&rdquo;</div>
-                    <div style={{ fontSize: 10, color: 'var(--t3)', letterSpacing: 2, fontFamily: 'var(--font-mono)' }}>
-                      — BOTB · {oracle.analyticalDriver}
-                    </div>
-                  </div>
-                )}
-                {revealStep >= 4 && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <button onClick={() => { setView('select'); setSelectedMatch(null); setOracle(null); setResultFixture(null); setRevealStep(0); }}
+                    <button onClick={() => { setView('select'); setSelectedMatch(null); setResultFixture(null); setRevealStep(0); }}
                       style={{ background: 'linear-gradient(135deg,var(--c),var(--c2))', border: 'none', borderRadius: 6, padding: '14px', color: '#000', fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 800, letterSpacing: 2, cursor: 'pointer' }}>
                       ⚡ PREDICT ANOTHER MATCH
                     </button>
-                    <button onClick={() => { setView('select'); setSelectedMatch(null); setOracle(null); setResultFixture(null); setRevealStep(0); setUserName(''); setEmailPrefix(''); setHomeScore(1); setAwayScore(1); setFirstScorer(''); }}
+                    <button onClick={() => { setView('select'); setSelectedMatch(null); setResultFixture(null); setRevealStep(0); setUserName(''); setEmailPrefix(''); setHomeScore(1); setAwayScore(1); setFirstScorer(''); }}
                       style={{ background: 'transparent', border: '1px solid var(--b2)', borderRadius: 6, padding: '14px', color: 'var(--t2)', fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>
                       NEW PLAYER
                     </button>
