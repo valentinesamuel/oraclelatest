@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
- 
+
 import Ticker from '../../components/Ticker';
+import BottomTabBar from '../../components/BottomTabBar';
 import type { Fixture, LeaderboardEntry, Team } from '../../types';
 import Leaderboard from '../../components/Leaderboard';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 type View = 'select' | 'predict' | 'loading' | 'reveal';
+type MobileTab = 'fixtures' | 'predict' | 'leaderboard';
 
 function statusLabel(status: string): string {
   switch (status) {
@@ -70,6 +73,9 @@ function StatusBadge({ fixture }: { fixture: Fixture }) {
 }
 
 export default function ArenaPage() {
+  const bp = useBreakpoint();
+  const isMobile = bp === 'mobile';
+
   const [fixtures, setFixtures]           = useState<Fixture[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<Fixture | null>(null);
   const [view, setView]                   = useState<View>('select');
@@ -85,6 +91,8 @@ export default function ArenaPage() {
   const [leaderboard, setLeaderboard]     = useState<LeaderboardEntry[]>([]);
   const [oracleStatus, setOracleStatus]   = useState('AWAITING PREDICTIONS');
   const [fixturesLoading, setFixturesLoading] = useState(true);
+  const [mobileTab, setMobileTab]         = useState<MobileTab>('fixtures');
+  const [identityLocked, setIdentityLocked] = useState(false);
 
   const liveFixtures     = fixtures.filter(isLive);
   const predictable      = fixtures.filter(canPredict).sort((a, b) => new Date(a.startingAt).getTime() - new Date(b.startingAt).getTime());
@@ -121,6 +129,27 @@ export default function ArenaPage() {
   useEffect(() => { const t = setInterval(fetchLeaderboard, 30_000); return () => clearInterval(t); }, [fetchLeaderboard]);
 
   useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('botb_identity');
+      if (raw) {
+        const { n, e, t } = JSON.parse(atob(raw));
+        setUserName(n);
+        setEmailPrefix(e);
+        setTeam(t as Team);
+        setIdentityLocked(true);
+      }
+    } catch {
+      sessionStorage.removeItem('botb_identity');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (view !== 'reveal' || !isMobile) return;
+    const timer = setTimeout(() => setMobileTab('fixtures'), 2500);
+    return () => clearTimeout(timer);
+  }, [view, isMobile]);
+
+  useEffect(() => {
     const msgs: Record<View, string[]> = {
       select:  ['AWAITING PREDICTIONS', 'SELECT A FIXTURE'],
       predict: ['READY TO ANALYZE', 'AWAITING YOUR PICK'],
@@ -144,6 +173,7 @@ export default function ArenaPage() {
     setResultFixture(null);
     setRevealStep(0);
     setView('predict');
+    if (isMobile) setMobileTab('predict');
   };
 
   const handleSubmit = async () => {
@@ -173,6 +203,11 @@ export default function ArenaPage() {
         return;
       }
       setResultFixture(data.fixture);
+      if (!identityLocked) {
+        const payload = btoa(JSON.stringify({ n: userName.trim(), e: emailPrefix.trim(), t: team }));
+        sessionStorage.setItem('botb_identity', payload);
+        setIdentityLocked(true);
+      }
       await fetchLeaderboard();
       clearInterval(msgTimer);
       setView('reveal');
@@ -191,7 +226,7 @@ export default function ArenaPage() {
     const live    = isLive(fixture);
     const finished = isFinished(fixture);
     return (
-      <div onClick={() => !locked && handleSelectMatch(fixture)} style={{
+      <div onClick={() => !locked && handleSelectMatch(fixture)} className="fixture-row" style={{
         padding: '10px 14px', borderBottom: '1px solid var(--b1)',
         borderLeft: `3px solid ${active ? 'var(--c)' : live ? 'var(--red)' : 'transparent'}`,
         background: active ? 'rgba(255,215,0,0.07)' : live ? 'rgba(255,64,64,0.04)' : 'transparent',
@@ -225,14 +260,330 @@ export default function ArenaPage() {
 
   const Stepper = ({ value, onChange }: { value: number; onChange: (v: number) => void }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <button onClick={() => onChange(Math.min(9, value + 1))} style={{ width: 58, height: 30, background: 'var(--bg3)', border: '1px solid var(--b2)', borderRadius: '4px 4px 0 0', color: 'var(--t2)', fontSize: 18, cursor: 'pointer', fontWeight: 700 }}>+</button>
+      <button onClick={() => onChange(Math.min(9, value + 1))} className="stepper-btn touch-target" style={{ width: 58, background: 'var(--bg3)', border: '1px solid var(--b2)', borderRadius: '4px 4px 0 0', color: 'var(--t2)', fontSize: 18, cursor: 'pointer', fontWeight: 700 }}>+</button>
       <div style={{ width: 58, height: 56, background: 'var(--bg3)', border: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 900, color: 'var(--t1)' }}>{value}</div>
-      <button onClick={() => onChange(Math.max(0, value - 1))} style={{ width: 58, height: 30, background: 'var(--bg3)', border: '1px solid var(--b2)', borderRadius: '0 0 4px 4px', color: 'var(--t2)', fontSize: 18, cursor: 'pointer', fontWeight: 700 }}>−</button>
+      <button onClick={() => onChange(Math.max(0, value - 1))} className="stepper-btn touch-target" style={{ width: 58, background: 'var(--bg3)', border: '1px solid var(--b2)', borderRadius: '0 0 4px 4px', color: 'var(--t2)', fontSize: 18, cursor: 'pointer', fontWeight: 700 }}>−</button>
     </div>
   );
 
+  // ── Render helpers shared by mobile and desktop ──
+
+  const renderFixturePanel = () => (
+    <div style={{ borderRight: '1px solid var(--b1)', background: 'var(--sidebar-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
+      <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', flexShrink: 0 }}>
+        <div style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)', marginBottom: 2 }}>FIXTURES</div>
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1, color: 'var(--t1)' }}>
+          {fixturesLoading ? 'Loading...' : `${predictable.length} available to predict`}
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {fixturesLoading && (
+          <div style={{ padding: 20, textAlign: 'center', color: 'var(--t3)', fontSize: 12 }}>Syncing fixtures…</div>
+        )}
+        {liveFixtures.length > 0 && (
+          <>
+            <div style={{ padding: '6px 14px', background: 'rgba(255,64,64,0.08)', fontSize: 8, letterSpacing: 3, color: 'var(--red)', borderBottom: '1px solid var(--b1)' }}>⚡ LIVE NOW</div>
+            {liveFixtures.map(f => <FixtureRow key={f.id} fixture={f} />)}
+          </>
+        )}
+        {predictable.length > 0 && (
+          <>
+            <div style={{ padding: '6px 14px', background: 'rgba(255,215,0,0.04)', fontSize: 8, letterSpacing: 3, color: 'var(--c)', borderBottom: '1px solid var(--b1)' }}>PREDICT NOW</div>
+            {predictable.map(f => <FixtureRow key={f.id} fixture={f} />)}
+          </>
+        )}
+        {finishedFixtures.length > 0 && (
+          <>
+            <div style={{ padding: '6px 14px', background: 'rgba(255,255,255,0.02)', fontSize: 8, letterSpacing: 3, color: 'var(--t3)', borderBottom: '1px solid var(--b1)' }}>RESULTS</div>
+            {finishedFixtures.map(f => <FixtureRow key={f.id} fixture={f} />)}
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderPredictPanel = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
+
+      {/* SELECT */}
+      {view === 'select' && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', gap: 28, textAlign: 'center' }}>
+          <div style={{ width: 76, height: 102, animation: 'pulse-glow 3s infinite', border: '2px solid rgba(255,215,0,0.3)', borderRadius: 8 }}>
+            <Image src="/ibplc-logo.png" alt="IBPLC" width={76} height={102} style={{ display: 'block', borderRadius: 6 }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: 4, color: 'var(--c)', marginBottom: 10 }}>BOTB IS READY</div>
+            <div style={{ fontSize: 14, color: 'var(--t2)', lineHeight: 1.8, maxWidth: 400 }}>
+              {isMobile ? 'Tap FIXTURES to pick a match.' : 'Select an upcoming fixture from the left.'}<br />
+              Predict blind — BOTB's call is sealed until after you submit.<br />
+              <strong style={{ color: 'var(--c3)' }}>Points are awarded automatically at Full Time.</strong>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+            {[['50 PTS','EXACT SCORE','var(--c3)'],['20 PTS','CORRECT WINNER','var(--c)'],['10 PTS','FIRST SCORER','var(--gold)']].map(([pts,label,color]) => (
+              <div key={label} style={{ textAlign: 'center', background: 'var(--bg2)', border: '1px solid var(--b1)', borderRadius: 6, padding: '12px 14px' }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color, lineHeight: 1 }}>{pts}</div>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', marginTop: 5 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+          {liveCount > 0 && (
+            <div style={{ background: 'rgba(255,64,64,0.08)', border: '1px solid rgba(255,64,64,0.3)', borderRadius: 6, padding: '10px 18px', fontSize: 12, color: '#ff8888' }}>
+              ⚡ {liveCount} match{liveCount > 1 ? 'es' : ''} live right now — predictions are locked until next fixture
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* PREDICT */}
+      {view === 'predict' && selectedMatch && (
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '18px 24px 0', flexShrink: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 9, letterSpacing: 4, color: 'var(--t3)' }}>
+                {selectedMatch.round ?? 'Group Stage'} · {new Date(selectedMatch.startingAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </span>
+              <StatusBadge fixture={selectedMatch} />
+            </div>
+            <div style={{ background: 'var(--bg2)', border: '1px solid var(--b2)', borderRadius: 10, padding: '18px 24px', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                    <FlagImg url={selectedMatch.homeFlagUrl} alt={selectedMatch.homeTeamName} />
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: 3 }}>{selectedMatch.homeTeamName.toUpperCase()}</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '0 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 4, color: 'var(--t3)' }}>VS</div>
+                  <div style={{ fontSize: 9, color: 'var(--t3)', marginTop: 6, letterSpacing: 2 }}>
+                    {new Date(selectedMatch.startingAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} WAT
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                    <FlagImg url={selectedMatch.awayFlagUrl} alt={selectedMatch.awayTeamName} />
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: 3 }}>{selectedMatch.awayTeamName.toUpperCase()}</div>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(255,215,0,0.04)', border: '1px solid rgba(255,215,0,0.12)', borderRadius: 6 }}>
+              <span style={{ fontSize: 14 }}>🔒</span>
+              <span style={{ fontSize: 11, color: 'var(--t3)', letterSpacing: 1 }}>BOTB's prediction is sealed until you submit. Points awarded at Full Time.</span>
+            </div>
+          </div>
+          <div style={{ padding: '16px 24px 20px', display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
+            <div className="resp-grid-1col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  YOUR NAME
+                  {identityLocked && <span style={{ color: 'var(--c)', opacity: 0.7 }}>· LOCKED</span>}
+                </label>
+                <input value={userName} onChange={e => !identityLocked && setUserName(e.target.value)} placeholder="Enter your name..."
+                  readOnly={identityLocked}
+                  autoCapitalize="words"
+                  className="arena-input"
+                  style={{ width: '100%', background: 'var(--bg3)', border: `1px solid ${identityLocked ? 'var(--b1)' : 'var(--b2)'}`, borderRadius: 6, padding: '10px 12px', color: 'var(--t1)', fontFamily: 'var(--font-head)', outline: 'none', opacity: identityLocked ? 0.7 : 1, cursor: identityLocked ? 'not-allowed' : undefined }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  EMAIL <span style={{ color: 'var(--t3)' }}>@ng.ab-inbev.com</span>
+                  {identityLocked && <span style={{ color: 'var(--c)', opacity: 0.7 }}>· LOCKED</span>}
+                </label>
+                <input value={emailPrefix} onChange={e => !identityLocked && setEmailPrefix(e.target.value)} placeholder="firstname.lastname"
+                  readOnly={identityLocked}
+                  inputMode="email"
+                  className="arena-input"
+                  style={{ width: '100%', background: 'var(--bg3)', border: `1px solid ${identityLocked ? 'var(--b1)' : 'var(--b2)'}`, borderRadius: 6, padding: '10px 12px', color: 'var(--t1)', fontFamily: 'var(--font-head)', outline: 'none', opacity: identityLocked ? 0.7 : 1, cursor: identityLocked ? 'not-allowed' : undefined }} />
+                {!identityLocked && <div style={{ fontSize: 9, color: 'var(--t3)', marginTop: 4, letterSpacing: 0.5 }}>Use your official email: firstname.lastname@ng.ab-inbev.com</div>}
+              </div>
+            </div>
+            <div>
+              <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                YOUR TEAM
+                {identityLocked && <span style={{ color: 'var(--c)', opacity: 0.7 }}>· LOCKED</span>}
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {(['Team Budweiser', 'Team Trophy'] as Team[]).map(t => (
+                  <button key={t} onClick={() => !identityLocked && setTeam(t)} style={{
+                    padding: '10px', borderRadius: 6, fontFamily: 'var(--font-head)', fontSize: 13, fontWeight: 700, letterSpacing: 1,
+                    cursor: identityLocked ? 'not-allowed' : 'pointer',
+                    background: team === t ? 'rgba(255,215,0,0.12)' : 'var(--bg3)',
+                    border: `1px solid ${team === t ? 'var(--c)' : 'var(--b2)'}`,
+                    color: team === t ? 'var(--c)' : 'var(--t2)',
+                    opacity: identityLocked && team !== t ? 0.4 : 1,
+                  }}>{t.toUpperCase()}</button>
+                ))}
+              </div>
+            </div>
+            <div className="resp-grid-1col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'block', marginBottom: 8 }}>YOUR PREDICTED SCORE</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                    <div style={{ fontSize: 9, color: 'var(--t3)', letterSpacing: 1 }}>{selectedMatch.homeTeamName.substring(0,3).toUpperCase()}</div>
+                    <Stepper value={homeScore} onChange={setHomeScore} />
+                  </div>
+                  <div style={{ fontSize: 28, color: 'var(--t3)', fontWeight: 300, paddingTop: 20 }}>—</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                    <div style={{ fontSize: 9, color: 'var(--t3)', letterSpacing: 1 }}>{selectedMatch.awayTeamName.substring(0,3).toUpperCase()}</div>
+                    <Stepper value={awayScore} onChange={setAwayScore} />
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 6 }}>
+                <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'block' }}>FIRST SCORER (Full Name) · OPTIONAL <span style={{ color: 'var(--gold)' }}>+10 PTS</span></label>
+                <input value={firstScorer} onChange={e => setFirstScorer(e.target.value)} placeholder="Player name..."
+                  className="arena-input"
+                  style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--b2)', borderRadius: 6, padding: '10px 12px', color: 'var(--t1)', fontFamily: 'var(--font-head)', outline: 'none' }} />
+                <div style={{ fontSize: 10, color: 'var(--t3)', lineHeight: 1.5 }}>Predictions lock at kick-off. Results scored at Full Time.</div>
+              </div>
+            </div>
+            <button onClick={handleSubmit} disabled={!userName.trim() || !emailPrefix.trim()}
+              style={{ width: '100%', border: 'none', borderRadius: 6, padding: '16px', background: (!userName.trim() || !emailPrefix.trim()) ? 'var(--b2)' : 'linear-gradient(135deg,var(--c),var(--c2))', color: (!userName.trim() || !emailPrefix.trim()) ? 'var(--t3)' : '#000', fontFamily: 'var(--font-head)', fontSize: 19, fontWeight: 800, letterSpacing: 3, cursor: (!userName.trim() || !emailPrefix.trim()) ? 'not-allowed' : 'pointer' }}>
+              ⚡ LOCK IN &amp; CHALLENGE BOTB
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* LOADING */}
+      {view === 'loading' && selectedMatch && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, padding: '2rem' }}>
+          <div style={{ width: 84, height: 113, animation: 'pulse-glow 1s infinite', border: '2px solid var(--c)', borderRadius: 8 }}>
+            <Image src="/ibplc-logo.png" alt="IBPLC" width={84} height={113} style={{ display: 'block', borderRadius: 6 }} />
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 12, letterSpacing: 4, color: 'var(--c)', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>LOCKING IN YOUR PREDICTION</div>
+            <div style={{ fontSize: 16, color: 'var(--t1)', marginBottom: 6 }}>{loadingMsg}</div>
+            <div style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--font-mono)' }}>{selectedMatch.homeTeamName} vs {selectedMatch.awayTeamName}</div>
+          </div>
+        </div>
+      )}
+
+      {/* REVEAL */}
+      {view === 'reveal' && (resultFixture ?? selectedMatch) && (() => {
+        const fix = resultFixture ?? selectedMatch!;
+        return (
+          <div style={{ flex: 1, overflowY: 'auto', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {revealStep >= 1 && (
+              <div style={{ animation: 'slide-up 0.4s ease', background: 'var(--bg2)', border: '1px solid var(--b2)', borderRadius: 10, padding: '16px 20px' }}>
+                <div style={{ fontSize: 9, letterSpacing: 4, color: 'var(--t3)', marginBottom: 12 }}>{fix.round ?? 'Group Stage'} · PREDICTION SEALED</div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, letterSpacing: 3, color: 'var(--t3)', marginBottom: 10 }}>YOUR PREDICTION</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
+                    <FlagImg url={fix.homeFlagUrl} alt={fix.homeTeamName} />
+                    <span style={{ fontSize: 46, fontWeight: 900, color: 'var(--t1)', letterSpacing: -2, lineHeight: 1 }}>{homeScore}</span>
+                    <span style={{ fontSize: 22, color: 'var(--t3)', fontWeight: 300 }}>—</span>
+                    <span style={{ fontSize: 46, fontWeight: 900, color: 'var(--t1)', letterSpacing: -2, lineHeight: 1 }}>{awayScore}</span>
+                    <FlagImg url={fix.awayFlagUrl} alt={fix.awayTeamName} />
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t2)' }}>{userName}</div>
+                </div>
+              </div>
+            )}
+            {revealStep >= 2 && (
+              <div style={{ animation: 'slide-up 0.4s ease', background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.2)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ fontSize: 28 }}>⏳</div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c)', marginBottom: 4 }}>Prediction Locked In!</div>
+                  <div style={{ fontSize: 12, color: 'var(--t2)', lineHeight: 1.5 }}>
+                    Points are awarded automatically when the match reaches Full Time.<br />
+                    Kick-off: <strong style={{ color: 'var(--t1)' }}>{new Date(fix.startingAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {new Date(fix.startingAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} WAT</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+            {revealStep >= 3 && (
+              <div className="resp-grid-1col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <button onClick={() => { setView('select'); setSelectedMatch(null); setResultFixture(null); setRevealStep(0); setMobileTab('fixtures'); }}
+                  style={{ background: 'linear-gradient(135deg,var(--c),var(--c2))', border: 'none', borderRadius: 6, padding: '14px', color: '#000', fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 800, letterSpacing: 2, cursor: 'pointer' }}>
+                  ⚡ PREDICT ANOTHER MATCH
+                </button>
+                {/* <button onClick={() => { setView('select'); setSelectedMatch(null); setResultFixture(null); setRevealStep(0); setHomeScore(1); setAwayScore(1); setFirstScorer(''); }}
+                  style={{ background: 'transparent', border: '1px solid var(--b2)', borderRadius: 6, padding: '14px', color: 'var(--t2)', fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>
+                  NEW PLAYER
+                </button> */}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+    </div>
+  );
+
+  const renderLeaderboardPanel = () => (
+    <div style={{ background: 'var(--sidebar-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
+      <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)', marginBottom: 2 }}>GLOBAL RANKINGS</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>Leaderboard</div>
+        </div>
+        <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', borderRadius: 3, background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: 'var(--c)' }}>
+          {leaderboard.length} PLAYERS
+        </span>
+      </div>
+      <Leaderboard leaderboard={leaderboard} />
+    </div>
+  );
+
+  // ── Header (shared) ──
+  const renderHeader = () => (
+    <div className="arena-header" style={{ height: 56, flexShrink: 0, background: 'var(--header-bg)', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', position: 'relative', zIndex: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Image src="/ibplc-logo.png" alt="IBPLC" width={30} height={40} style={{ display: 'block' }} />
+        <div>
+          <div className="title-md" style={{ fontWeight: 900, color: 'var(--c)', lineHeight: 1 }}>BATTLE OF THE BRANDS</div>
+          <div className="resp-hide-mobile" style={{ fontSize: 9, letterSpacing: 4, color: 'var(--t3)' }}>PREDICTION ENGINE v4.1 · FIFA WORLD CUP 2026</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="resp-hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--c3)' }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--c3)', animation: 'pulse-glow 2s infinite' }} />
+          {oracleStatus}
+        </div>
+        {liveCount > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,64,64,0.15)', border: '1px solid rgba(255,64,64,0.5)', padding: '5px 12px', borderRadius: 4 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--red)', animation: 'pulse-dot 1s infinite' }} />
+            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, color: '#ff7070' }}>{liveCount} LIVE</span>
+          </div>
+        )}
+        <div className="resp-hide-mobile" style={{ background: 'var(--bg3)', border: '1px solid var(--b1)', padding: '4px 14px', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t2)' }}>
+          {leaderboard.length} PLAYERS
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Mobile layout ──
+  if (isMobile) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ position: 'fixed', inset: 0, opacity: 0.03, pointerEvents: 'none', zIndex: 0, backgroundImage: 'linear-gradient(var(--c) 1px,transparent 1px),linear-gradient(90deg,var(--c) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'radial-gradient(ellipse at center,transparent 30%,var(--vignette) 100%)' }} />
+
+        {renderHeader()}
+
+        <div className="mobile-panel" style={{ position: 'relative', zIndex: 5 }}>
+          {mobileTab === 'fixtures'     && renderFixturePanel()}
+          {mobileTab === 'predict'      && renderPredictPanel()}
+          {mobileTab === 'leaderboard'  && renderLeaderboardPanel()}
+        </div>
+
+        <div className="tab-bar-spacer" />
+        <BottomTabBar
+          activeTab={mobileTab}
+          onTab={setMobileTab}
+          liveCount={liveCount}
+          hasActivePrediction={view !== 'select'}
+        />
+      </div>
+    );
+  }
+
+  // ── Desktop / tablet layout (unchanged) ──
   return (
-    <div style={{ width: '100vw', height: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ position: 'fixed', inset: 0, opacity: 0.03, pointerEvents: 'none', zIndex: 0, backgroundImage: 'linear-gradient(var(--c) 1px,transparent 1px),linear-gradient(90deg,var(--c) 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, background: 'radial-gradient(ellipse at center,transparent 30%,var(--vignette) 100%)' }} />
 
@@ -264,244 +615,9 @@ export default function ArenaPage() {
 
       {/* Main grid */}
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '290px 1fr 280px', minHeight: 0, position: 'relative', zIndex: 5 }}>
-
-        {/* LEFT: fixture list */}
-        <div style={{ borderRight: '1px solid var(--b1)', background: 'var(--sidebar-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', flexShrink: 0 }}>
-            <div style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)', marginBottom: 2 }}>FIXTURES</div>
-            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1, color: 'var(--t1)' }}>
-              {fixturesLoading ? 'Loading...' : `${predictable.length} available to predict`}
-            </div>
-          </div>
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {fixturesLoading && (
-              <div style={{ padding: 20, textAlign: 'center', color: 'var(--t3)', fontSize: 12 }}>Syncing fixtures…</div>
-            )}
-            {liveFixtures.length > 0 && (
-              <>
-                <div style={{ padding: '6px 14px', background: 'rgba(255,64,64,0.08)', fontSize: 8, letterSpacing: 3, color: 'var(--red)', borderBottom: '1px solid var(--b1)' }}>⚡ LIVE NOW</div>
-                {liveFixtures.map(f => <FixtureRow key={f.id} fixture={f} />)}
-              </>
-            )}
-            {predictable.length > 0 && (
-              <>
-                <div style={{ padding: '6px 14px', background: 'rgba(255,215,0,0.04)', fontSize: 8, letterSpacing: 3, color: 'var(--c)', borderBottom: '1px solid var(--b1)' }}>PREDICT NOW</div>
-                {predictable.map(f => <FixtureRow key={f.id} fixture={f} />)}
-              </>
-            )}
-            {finishedFixtures.length > 0 && (
-              <>
-                <div style={{ padding: '6px 14px', background: 'rgba(255,255,255,0.02)', fontSize: 8, letterSpacing: 3, color: 'var(--t3)', borderBottom: '1px solid var(--b1)' }}>RESULTS</div>
-                {finishedFixtures.map(f => <FixtureRow key={f.id} fixture={f} />)}
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* CENTER */}
-        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-          {/* SELECT */}
-          {view === 'select' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', gap: 28, textAlign: 'center' }}>
-              <div style={{ width: 76, height: 102, animation: 'pulse-glow 3s infinite', border: '2px solid rgba(255,215,0,0.3)', borderRadius: 8 }}>
-                <Image src="/ibplc-logo.png" alt="IBPLC" width={76} height={102} style={{ display: 'block', borderRadius: 6 }} />
-              </div>
-              <div>
-                <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: 4, color: 'var(--c)', marginBottom: 10 }}>BOTB IS READY</div>
-                <div style={{ fontSize: 14, color: 'var(--t2)', lineHeight: 1.8, maxWidth: 400 }}>
-                  Select an upcoming fixture from the left.<br />
-                  Predict blind — BOTB's call is sealed until after you submit.<br />
-                  <strong style={{ color: 'var(--c3)' }}>Points are awarded automatically at Full Time.</strong>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-                {[['50 PTS','EXACT SCORE','var(--c3)'],['20 PTS','CORRECT WINNER','var(--c)'],['10 PTS','FIRST SCORER','var(--gold)']].map(([pts,label,color]) => (
-                  <div key={label} style={{ textAlign: 'center', background: 'var(--bg2)', border: '1px solid var(--b1)', borderRadius: 6, padding: '12px 14px' }}>
-                    <div style={{ fontSize: 22, fontWeight: 900, color, lineHeight: 1 }}>{pts}</div>
-                    <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', marginTop: 5 }}>{label}</div>
-                  </div>
-                ))}
-              </div>
-              {liveCount > 0 && (
-                <div style={{ background: 'rgba(255,64,64,0.08)', border: '1px solid rgba(255,64,64,0.3)', borderRadius: 6, padding: '10px 18px', fontSize: 12, color: '#ff8888' }}>
-                  ⚡ {liveCount} match{liveCount > 1 ? 'es' : ''} live right now — predictions are locked until next fixture
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* PREDICT */}
-          {view === 'predict' && selectedMatch && (
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '18px 24px 0', flexShrink: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <span style={{ fontSize: 9, letterSpacing: 4, color: 'var(--t3)' }}>
-                    {selectedMatch.round ?? 'Group Stage'} · {new Date(selectedMatch.startingAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </span>
-                  <StatusBadge fixture={selectedMatch} />
-                </div>
-                <div style={{ background: 'var(--bg2)', border: '1px solid var(--b2)', borderRadius: 10, padding: '18px 24px', marginBottom: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ textAlign: 'center', flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-                        <FlagImg url={selectedMatch.homeFlagUrl} alt={selectedMatch.homeTeamName} />
-                      </div>
-                      <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: 3 }}>{selectedMatch.homeTeamName.toUpperCase()}</div>
-                    </div>
-                    <div style={{ textAlign: 'center', padding: '0 16px' }}>
-                      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 4, color: 'var(--t3)' }}>VS</div>
-                      <div style={{ fontSize: 9, color: 'var(--t3)', marginTop: 6, letterSpacing: 2 }}>
-                        {new Date(selectedMatch.startingAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} WAT
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'center', flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-                        <FlagImg url={selectedMatch.awayFlagUrl} alt={selectedMatch.awayTeamName} />
-                      </div>
-                      <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: 3 }}>{selectedMatch.awayTeamName.toUpperCase()}</div>
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(255,215,0,0.04)', border: '1px solid rgba(255,215,0,0.12)', borderRadius: 6 }}>
-                  <span style={{ fontSize: 14 }}>🔒</span>
-                  <span style={{ fontSize: 11, color: 'var(--t3)', letterSpacing: 1 }}>BOTB's prediction is sealed until you submit. Points awarded at Full Time.</span>
-                </div>
-              </div>
-              <div style={{ padding: '16px 24px 20px', display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'block', marginBottom: 6 }}>YOUR NAME</label>
-                    <input value={userName} onChange={e => setUserName(e.target.value)} placeholder="Enter your name..."
-                      style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--b2)', borderRadius: 6, padding: '10px 12px', color: 'var(--t1)', fontFamily: 'var(--font-head)', fontSize: 15, outline: 'none' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'block', marginBottom: 6 }}>EMAIL <span style={{ color: 'var(--t3)' }}>@ng.ab-inbev.com</span></label>
-                    <input value={emailPrefix} onChange={e => setEmailPrefix(e.target.value)} placeholder="firstname.lastname"
-                      style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--b2)', borderRadius: 6, padding: '10px 12px', color: 'var(--t1)', fontFamily: 'var(--font-head)', fontSize: 15, outline: 'none' }} />
-                    <div style={{ fontSize: 9, color: 'var(--t3)', marginTop: 4, letterSpacing: 0.5 }}>Use your official email: firstname.lastname@ng.ab-inbev.com</div>
-                  </div>
-                </div>
-                <div>
-                  <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'block', marginBottom: 6 }}>YOUR TEAM</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    {(['Team Budweiser', 'Team Trophy'] as Team[]).map(t => (
-                      <button key={t} onClick={() => setTeam(t)} style={{
-                        padding: '10px', borderRadius: 6, cursor: 'pointer', fontFamily: 'var(--font-head)', fontSize: 13, fontWeight: 700, letterSpacing: 1,
-                        background: team === t ? 'rgba(255,215,0,0.12)' : 'var(--bg3)',
-                        border: `1px solid ${team === t ? 'var(--c)' : 'var(--b2)'}`,
-                        color: team === t ? 'var(--c)' : 'var(--t2)',
-                      }}>{t.toUpperCase()}</button>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'block', marginBottom: 8 }}>YOUR PREDICTED SCORE</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                        <div style={{ fontSize: 9, color: 'var(--t3)', letterSpacing: 1 }}>{selectedMatch.homeTeamName.substring(0,3).toUpperCase()}</div>
-                        <Stepper value={homeScore} onChange={setHomeScore} />
-                      </div>
-                      <div style={{ fontSize: 28, color: 'var(--t3)', fontWeight: 300, paddingTop: 20 }}>—</div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                        <div style={{ fontSize: 9, color: 'var(--t3)', letterSpacing: 1 }}>{selectedMatch.awayTeamName.substring(0,3).toUpperCase()}</div>
-                        <Stepper value={awayScore} onChange={setAwayScore} />
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 6 }}>
-                    <label style={{ fontSize: 9, letterSpacing: 2, color: 'var(--t3)', display: 'block' }}>FIRST SCORER (Full Name) · OPTIONAL <span style={{ color: 'var(--gold)' }}>+10 PTS</span></label>
-                    <input value={firstScorer} onChange={e => setFirstScorer(e.target.value)} placeholder="Player name..."
-                      style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--b2)', borderRadius: 6, padding: '10px 12px', color: 'var(--t1)', fontFamily: 'var(--font-head)', fontSize: 15, outline: 'none' }} />
-                    <div style={{ fontSize: 10, color: 'var(--t3)', lineHeight: 1.5 }}>Predictions lock at kick-off. Results scored at Full Time.</div>
-                  </div>
-                </div>
-                <button onClick={handleSubmit} disabled={!userName.trim() || !emailPrefix.trim()}
-                  style={{ width: '100%', border: 'none', borderRadius: 6, padding: '16px', background: (!userName.trim() || !emailPrefix.trim()) ? 'var(--b2)' : 'linear-gradient(135deg,var(--c),var(--c2))', color: (!userName.trim() || !emailPrefix.trim()) ? 'var(--t3)' : '#000', fontFamily: 'var(--font-head)', fontSize: 19, fontWeight: 800, letterSpacing: 3, cursor: (!userName.trim() || !emailPrefix.trim()) ? 'not-allowed' : 'pointer' }}>
-                  ⚡ LOCK IN &amp; CHALLENGE BOTB
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* LOADING */}
-          {view === 'loading' && selectedMatch && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, padding: '2rem' }}>
-              <div style={{ width: 84, height: 113, animation: 'pulse-glow 1s infinite', border: '2px solid var(--c)', borderRadius: 8 }}>
-                <Image src="/ibplc-logo.png" alt="IBPLC" width={84} height={113} style={{ display: 'block', borderRadius: 6 }} />
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 12, letterSpacing: 4, color: 'var(--c)', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>LOCKING IN YOUR PREDICTION</div>
-                <div style={{ fontSize: 16, color: 'var(--t1)', marginBottom: 6 }}>{loadingMsg}</div>
-                <div style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--font-mono)' }}>{selectedMatch.homeTeamName} vs {selectedMatch.awayTeamName}</div>
-              </div>
-            </div>
-          )}
-
-          {/* REVEAL */}
-          {view === 'reveal' && (resultFixture ?? selectedMatch) && (() => {
-            const fix = resultFixture ?? selectedMatch!;
-            return (
-              <div style={{ flex: 1, overflowY: 'auto', padding: '18px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {revealStep >= 1 && (
-                  <div style={{ animation: 'slide-up 0.4s ease', background: 'var(--bg2)', border: '1px solid var(--b2)', borderRadius: 10, padding: '16px 20px' }}>
-                    <div style={{ fontSize: 9, letterSpacing: 4, color: 'var(--t3)', marginBottom: 12 }}>{fix.round ?? 'Group Stage'} · PREDICTION SEALED</div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: 10, letterSpacing: 3, color: 'var(--t3)', marginBottom: 10 }}>YOUR PREDICTION</div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
-                        <FlagImg url={fix.homeFlagUrl} alt={fix.homeTeamName} />
-                        <span style={{ fontSize: 46, fontWeight: 900, color: 'var(--t1)', letterSpacing: -2, lineHeight: 1 }}>{homeScore}</span>
-                        <span style={{ fontSize: 22, color: 'var(--t3)', fontWeight: 300 }}>—</span>
-                        <span style={{ fontSize: 46, fontWeight: 900, color: 'var(--t1)', letterSpacing: -2, lineHeight: 1 }}>{awayScore}</span>
-                        <FlagImg url={fix.awayFlagUrl} alt={fix.awayTeamName} />
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t2)' }}>{userName}</div>
-                    </div>
-                  </div>
-                )}
-                {revealStep >= 2 && (
-                  <div style={{ animation: 'slide-up 0.4s ease', background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.2)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <div style={{ fontSize: 28 }}>⏳</div>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--c)', marginBottom: 4 }}>Prediction Locked In!</div>
-                      <div style={{ fontSize: 12, color: 'var(--t2)', lineHeight: 1.5 }}>
-                        Points are awarded automatically when the match reaches Full Time.<br />
-                        Kick-off: <strong style={{ color: 'var(--t1)' }}>{new Date(fix.startingAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · {new Date(fix.startingAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} WAT</strong>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {revealStep >= 3 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <button onClick={() => { setView('select'); setSelectedMatch(null); setResultFixture(null); setRevealStep(0); }}
-                      style={{ background: 'linear-gradient(135deg,var(--c),var(--c2))', border: 'none', borderRadius: 6, padding: '14px', color: '#000', fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 800, letterSpacing: 2, cursor: 'pointer' }}>
-                      ⚡ PREDICT ANOTHER MATCH
-                    </button>
-                    <button onClick={() => { setView('select'); setSelectedMatch(null); setResultFixture(null); setRevealStep(0); setUserName(''); setEmailPrefix(''); setHomeScore(1); setAwayScore(1); setFirstScorer(''); }}
-                      style={{ background: 'transparent', border: '1px solid var(--b2)', borderRadius: 6, padding: '14px', color: 'var(--t2)', fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}>
-                      NEW PLAYER
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* RIGHT: Leaderboard */}
-        <div style={{ borderLeft: '1px solid var(--b1)', background: 'var(--sidebar-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)', marginBottom: 2 }}>GLOBAL RANKINGS</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>Leaderboard</div>
-            </div>
-            <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', borderRadius: 3, background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: 'var(--c)' }}>
-              {leaderboard.length} PLAYERS
-            </span>
-          </div>
-          <Leaderboard leaderboard={leaderboard} />
-        </div>
+        <div style={{ borderRight: '1px solid var(--b1)' }}>{renderFixturePanel()}</div>
+        {renderPredictPanel()}
+        <div style={{ borderLeft: '1px solid var(--b1)' }}>{renderLeaderboardPanel()}</div>
       </div>
 
       <Ticker topPlayer={topPlayer?.name} topPts={topPlayer?.totalPoints} totalPreds={leaderboard.length} />

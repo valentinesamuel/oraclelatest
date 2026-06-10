@@ -23,13 +23,10 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
+      className="theme-toggle-btn"
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       style={{
-        position: 'fixed',
-        top: 12,
-        right: 12,
-        zIndex: 1000,
         background: 'var(--bg2)',
         border: '1px solid var(--b2)',
         borderRadius: 6,
@@ -38,6 +35,7 @@ export default function ThemeToggle() {
         cursor: 'pointer',
         fontSize: 16,
         lineHeight: 1,
+        zIndex: 1100,
       }}
     >
       {theme === 'dark' ? '☀' : '☾'}

@@ -7,7 +7,6 @@ export default function HomePage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--bg)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -26,8 +25,8 @@ export default function HomePage() {
 
       {/* Logo */}
       <div style={{ textAlign: 'center', zIndex: 1 }}>
-        <Image src="/ibplc-logo.png" alt="IBPLC" width={64} height={86} style={{ margin: '0 auto 16px', display: 'block' }} />
-        <div style={{ fontSize: 52, fontWeight: 900, letterSpacing: 10, color: 'var(--c)', lineHeight: 1 }}>
+        <Image src="/budweiser.png" alt="Budweiser" width={320} height={134} style={{ margin: '0 auto 24px', display: 'block', maxWidth: '80vw', height: 'auto' }} />
+        <div className="title-xl" style={{ fontWeight: 900, color: 'var(--c)', lineHeight: 1 }}>
           BATTLE OF THE BRANDS
         </div>
         <div style={{ fontSize: 12, letterSpacing: 5, color: 'var(--t3)', marginTop: 8 }}>
@@ -36,7 +35,7 @@ export default function HomePage() {
       </div>
 
       {/* Route cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, width: '100%', maxWidth: 560, zIndex: 1 }}>
+      <div className="resp-grid-1col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, width: '100%', maxWidth: 560, zIndex: 1 }}>
         <Link href="/arena" style={{ textDecoration: 'none' }}>
           <div style={{
             background: 'var(--bg2)', border: '1px solid var(--b2)', borderRadius: 8,
@@ -48,7 +47,7 @@ export default function HomePage() {
               PREDICTION ARENA
             </div>
             <div style={{ fontSize: 12, color: 'var(--t3)', lineHeight: 1.4 }}>
-              Kiosk / tablet view. Submit predictions, earn points.
+              Submit predictions, earn points.
             </div>
           </div>
         </Link>
@@ -70,7 +69,7 @@ export default function HomePage() {
         </Link>
       </div>
 
-      <div style={{ fontSize: 11, color: 'var(--t3)', letterSpacing: 3, zIndex: 1 }}>
+      <div className="resp-hide-mobile" style={{ fontSize: 11, color: 'var(--t3)', letterSpacing: 3, zIndex: 1 }}>
         OPEN /arena ON TABLETS · /wall ON THE BIG SCREEN
       </div>
     </div>

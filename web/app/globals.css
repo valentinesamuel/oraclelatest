@@ -34,6 +34,7 @@
   --sidebar-bg: rgba(17,17,17,0.85);
   --header-bg:  rgba(10,10,10,0.98);
   --vignette:   rgba(0,0,0,0.80);
+  --bg-overlay: rgba(10, 10, 10, 0.88);
 }
 
 [data-theme="light"] {
@@ -53,6 +54,7 @@
   --sidebar-bg: rgba(238,241,245,0.95);
   --header-bg:  rgba(245,247,250,0.98);
   --vignette:   rgba(229,234,242,0.50);
+  --bg-overlay: rgba(245, 247, 250, 0.92);
 }
 
 *, *::before, *::after {
@@ -61,10 +63,22 @@
   padding: 0;
 }
 
-html, body {
+html {
   width: 100%;
   height: 100%;
-  background: var(--bg);
+  background-color: var(--bg);
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(var(--bg-overlay), var(--bg-overlay)),
+    url('/bg_worldcup.png');
+  background-size: 100% 100%, cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--t1);
   font-family: var(--font-head);
   -webkit-font-smoothing: antialiased;
@@ -121,4 +135,129 @@ html, body {
 @keyframes counter-up {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* === RESPONSIVE === */
+
+/* Layout helpers */
+.resp-grid-1col     { /* overridden at mobile */ }
+.resp-hide-mobile   { /* overridden at mobile */ }
+.resp-hide-desktop  { display: none; }
+
+/* Touch targets */
+.touch-target { min-height: 44px; min-width: 44px; }
+
+/* Tab bar (always fixed at bottom, only rendered on mobile JSX branch) */
+.tab-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 56px;
+  z-index: 200;
+  display: flex;
+  align-items: stretch;
+}
+.tab-bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  font-family: var(--font-head);
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  position: relative;
+  min-height: 56px;
+  padding: 0;
+}
+.tab-bar-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 8px; right: 8px;
+  height: 2px;
+  background: var(--c);
+  border-radius: 0 0 2px 2px;
+}
+.tab-bar-spacer { height: 56px; flex-shrink: 0; }
+
+/* Scrollable mobile panel: header 56px + tab bar 56px */
+.mobile-panel {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Typography responsive classes */
+.title-xl {
+  font-size: 52px;
+  letter-spacing: 10px;
+}
+.title-lg {
+  font-size: 34px;
+  letter-spacing: 8px;
+}
+.title-md {
+  font-size: 26px;
+  letter-spacing: 6px;
+}
+
+/* Stepper buttons */
+.stepper-btn {
+  width: 58px;
+  height: 30px;
+}
+
+/* Fixture rows */
+.fixture-row {
+  min-height: 48px;
+}
+
+/* Form inputs (prevent iOS Safari zoom on focus) */
+.arena-input {
+  font-size: 15px;
+}
+
+/* Wall page */
+.wall-score-display { /* overridden at mobile */ }
+.wall-team-name     { /* overridden at mobile */ }
+.wall-cta-strip     { /* overridden at mobile */ }
+
+/* Theme toggle */
+.theme-toggle-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1100;
+}
+
+/* ── Tablet (768px – 1023px) ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .title-xl { font-size: 32px !important; letter-spacing: 6px !important; }
+  .title-lg { font-size: 24px !important; letter-spacing: 5px !important; }
+  .title-md { font-size: 20px !important; letter-spacing: 3px !important; }
+}
+
+/* ── Mobile (< 768px) ── */
+@media (max-width: 767px) {
+  .resp-grid-1col   { grid-template-columns: 1fr !important; }
+  .resp-hide-mobile { display: none !important; }
+  .resp-hide-desktop{ display: block; }
+
+  .title-xl { font-size: 24px !important; letter-spacing: 4px !important; }
+  .title-lg { font-size: 20px !important; letter-spacing: 3px !important; }
+  .title-md { font-size: 16px !important; letter-spacing: 2px !important; }
+
+  .stepper-btn  { height: 44px !important; }
+  .fixture-row  { min-height: 56px; padding: 12px 16px !important; }
+  .arena-input  { font-size: 16px !important; }
+
+  .wall-score-display { font-size: 48px !important; letter-spacing: -2px !important; }
+  .wall-team-name     { font-size: 15px !important; letter-spacing: 1px !important; }
+  .wall-cta-strip     { flex-direction: column !important; gap: 8px !important; padding: 10px 16px !important; align-items: flex-start !important; }
+
+  .theme-toggle-btn { top: 8px !important; right: 8px !important; }
 }
