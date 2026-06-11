@@ -20,6 +20,9 @@ function statusLabel(status: string): string {
 function isLive(f: Fixture)     { return f.status === 'LIVE'; }
 function isFinished(f: Fixture) { return f.status === 'FINISHED'; }
 function canPredict(f: Fixture) { return f.status === 'NOT_STARTED' && new Date(f.startingAt) > new Date(); }
+// Kicked off but the data feed hasn't flipped the status to LIVE yet.
+function isInProgress(f: Fixture) { return f.status === 'NOT_STARTED' && new Date(f.startingAt) <= new Date(); }
+function isPlaying(f: Fixture) { return isLive(f) || isInProgress(f); }
 
 function FlagImg({ url, alt, size = 32 }: { url: string | null; alt: string; size?: number }) {
   if (!url) return <span style={{ fontSize: size * 0.7 }}>🏳</span>;
@@ -27,14 +30,15 @@ function FlagImg({ url, alt, size = 32 }: { url: string | null; alt: string; siz
 }
 
 function StatusBadge({ fixture }: { fixture: Fixture }) {
-  const live     = isLive(fixture);
-  const finished = isFinished(fixture);
-  const label    = statusLabel(fixture.status);
-  const color    = live ? 'var(--red)' : finished ? 'var(--t3)' : 'var(--c3)';
-  const bg       = live ? 'rgba(255,64,64,0.15)' : finished ? 'rgba(255,255,255,0.05)' : 'rgba(0,255,163,0.1)';
+  const live       = isLive(fixture);
+  const inProgress = isInProgress(fixture);
+  const finished   = isFinished(fixture);
+  const label      = inProgress ? 'IN PROGRESS' : statusLabel(fixture.status);
+  const color      = live ? 'var(--red)' : inProgress ? 'var(--orange)' : finished ? 'var(--t3)' : 'var(--c3)';
+  const bg         = live ? 'rgba(255,64,64,0.15)' : inProgress ? 'rgba(255,149,0,0.15)' : finished ? 'rgba(255,255,255,0.05)' : 'rgba(0,255,163,0.1)';
   return (
     <span style={{ fontSize: 9, letterSpacing: 2, color, background: bg, border: `1px solid ${color}`, padding: '2px 7px', borderRadius: 3, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-      {live && <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, animation: 'pulse-dot 1s infinite', display: 'inline-block' }} />}
+      {(live || inProgress) && <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, animation: 'pulse-dot 1s infinite', display: 'inline-block' }} />}
       {label.toUpperCase()}
     </span>
   );
@@ -47,11 +51,14 @@ export default function WallPage() {
   const [fixtures, setFixtures]       = useState<Fixture[]>([]);
   const [selectedId, setSelectedId]   = useState<number | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [teamStandings, setTeamStandings] = useState<{ team: string; totalPoints: number }[]>([]);
+  const [totalPlayers, setTotalPlayers]   = useState(0);
+  const [totalPredictions, setTotalPredictions] = useState(0);
   const [clock, setClock]             = useState('');
   const autoRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const curIdxRef  = useRef(0);
 
-  const liveFixtures     = fixtures.filter(isLive);
+  const liveFixtures     = fixtures.filter(isPlaying);
   const predictable      = fixtures.filter(canPredict);
   const finishedFixtures = fixtures.filter(isFinished);
   const displayFixtures  = [...liveFixtures, ...predictable, ...finishedFixtures.slice(0, 5)];
@@ -73,6 +80,9 @@ export default function WallPage() {
       const res  = await fetch('/api/leaderboard');
       const data = await res.json();
       setLeaderboard(data.leaderboard ?? []);
+      setTeamStandings((data.teamStandings ?? []).map((t: any) => ({ team: t.team, totalPoints: t._sum?.totalPoints ?? 0 })));
+      setTotalPlayers(data.totalPlayers ?? 0);
+      setTotalPredictions(data.totalPredictions ?? 0);
     } catch { /* silent */ }
   }, []);
 
@@ -224,9 +234,13 @@ export default function WallPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <FlagImg url={f.homeFlagUrl} alt={f.homeTeamName} size={20} />
             <span style={{ fontSize: 12, fontWeight: 700, flex: 1 }}>{f.homeTeamName.toUpperCase()}</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 900, color: 'var(--red)', padding: '0 4px' }}>
-              {f.homeScore ?? 0} – {f.awayScore ?? 0}
-            </span>
+            {f.homeScore !== null ? (
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 900, color: 'var(--red)', padding: '0 4px' }}>
+                {f.homeScore} – {f.awayScore}
+              </span>
+            ) : (
+              <span style={{ fontSize: 10, color: 'var(--orange)', padding: '0 8px', letterSpacing: 1 }}>VS</span>
+            )}
             <span style={{ fontSize: 12, fontWeight: 700, flex: 1, textAlign: 'right' }}>{f.awayTeamName.toUpperCase()}</span>
             <FlagImg url={f.awayFlagUrl} alt={f.awayTeamName} size={20} />
           </div>
@@ -305,10 +319,10 @@ export default function WallPage() {
             <div style={{ padding: '10px 16px', background: 'var(--bg2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)' }}>LIVE LEADERBOARD</span>
               <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', borderRadius: 3, background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: 'var(--c)' }}>
-                {leaderboard.length} PLAYERS
+                {totalPlayers} PLAYERS
               </span>
             </div>
-            <Leaderboard leaderboard={leaderboard} />
+            <Leaderboard leaderboard={leaderboard} teamStandings={teamStandings} />
           </div>
 
           {/* Fixture list */}
@@ -376,7 +390,7 @@ export default function WallPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           {[
-            { val: String(leaderboard.length), key: 'PREDICTIONS', c: 'var(--c3)' },
+            { val: String(totalPredictions), key: 'PREDICTIONS', c: 'var(--c3)' },
             { val: String(liveFixtures.length), key: 'LIVE NOW', c: liveFixtures.length > 0 ? 'var(--red)' : 'var(--t3)' },
             { val: String(finishedFixtures.length), key: 'RESULTS', c: 'var(--gold)' },
             { val: String(predictable.length), key: 'TO PREDICT', c: 'var(--c3)' },
@@ -419,10 +433,10 @@ export default function WallPage() {
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
             <span style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)' }}>LIVE LEADERBOARD</span>
             <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', borderRadius: 3, background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: 'var(--c)' }}>
-              {leaderboard.length} PLAYERS
+              {totalPlayers} PLAYERS
             </span>
           </div>
-          <Leaderboard leaderboard={leaderboard} />
+          <Leaderboard leaderboard={leaderboard} teamStandings={teamStandings} />
         </div>
       </div>
 

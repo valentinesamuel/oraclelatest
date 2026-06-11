@@ -66,7 +66,7 @@ export const prediction = pgTable(
     createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
   },
   (table) => ({
-    emailMatchDateUnique: unique('prediction_email_matchDate_unique').on(table.email, table.matchDate),
+    emailFixtureUnique: unique('prediction_email_fixtureId_unique').on(table.email, table.fixtureId),
     fixtureProcessedIdx: index('prediction_fixtureId_processed_idx').on(table.fixtureId, table.processed),
   }),
 );

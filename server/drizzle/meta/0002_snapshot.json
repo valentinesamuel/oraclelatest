@@ -1,0 +1,449 @@
+{
+  "id": "e14c4032-81f3-4fb8-8375-fd558ff542ee",
+  "prevId": "ed0eab8c-aa03-4a54-aef4-5735ecffc97c",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.Fixture": {
+      "name": "Fixture",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "startingAt": {
+          "name": "startingAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "homeTeamName": {
+          "name": "homeTeamName",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "homeFlagUrl": {
+          "name": "homeFlagUrl",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "awayTeamName": {
+          "name": "awayTeamName",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "awayFlagUrl": {
+          "name": "awayFlagUrl",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "homeScore": {
+          "name": "homeScore",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "awayScore": {
+          "name": "awayScore",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "MatchStatus",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'NOT_STARTED'"
+        },
+        "leagueId": {
+          "name": "leagueId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seasonId": {
+          "name": "seasonId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stateId": {
+          "name": "stateId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "round": {
+          "name": "round",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rawSportmonksData": {
+          "name": "rawSportmonksData",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.JobQueue": {
+      "name": "JobQueue",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "fixtureId": {
+          "name": "fixtureId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "processAt": {
+          "name": "processAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "JobStatus",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PENDING'"
+        },
+        "retryCount": {
+          "name": "retryCount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "JobQueue_fixtureId_Fixture_id_fk": {
+          "name": "JobQueue_fixtureId_Fixture_id_fk",
+          "tableFrom": "JobQueue",
+          "tableTo": "Fixture",
+          "columnsFrom": [
+            "fixtureId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "jobQueue_fixtureId_unique": {
+          "name": "jobQueue_fixtureId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "fixtureId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Leaderboard": {
+      "name": "Leaderboard",
+      "schema": "",
+      "columns": {
+        "email": {
+          "name": "email",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team": {
+          "name": "team",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalPoints": {
+          "name": "totalPoints",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "leaderboard_totalPoints_idx": {
+          "name": "leaderboard_totalPoints_idx",
+          "columns": [
+            {
+              "expression": "totalPoints",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.Prediction": {
+      "name": "Prediction",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team": {
+          "name": "team",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "matchDate": {
+          "name": "matchDate",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fixtureId": {
+          "name": "fixtureId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "guessHome": {
+          "name": "guessHome",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "guessAway": {
+          "name": "guessAway",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "firstScorer": {
+          "name": "firstScorer",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "processed": {
+          "name": "processed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "exactScorePoints": {
+          "name": "exactScorePoints",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "correctWinnerPoints": {
+          "name": "correctWinnerPoints",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "firstScorerPoints": {
+          "name": "firstScorerPoints",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "totalPoints": {
+          "name": "totalPoints",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "prediction_fixtureId_processed_idx": {
+          "name": "prediction_fixtureId_processed_idx",
+          "columns": [
+            {
+              "expression": "fixtureId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "processed",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "Prediction_fixtureId_Fixture_id_fk": {
+          "name": "Prediction_fixtureId_Fixture_id_fk",
+          "tableFrom": "Prediction",
+          "tableTo": "Fixture",
+          "columnsFrom": [
+            "fixtureId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "prediction_email_fixtureId_unique": {
+          "name": "prediction_email_fixtureId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email",
+            "fixtureId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.JobStatus": {
+      "name": "JobStatus",
+      "schema": "public",
+      "values": [
+        "PENDING",
+        "RUNNING",
+        "COMPLETED",
+        "POSTPONED",
+        "VOID"
+      ]
+    },
+    "public.MatchStatus": {
+      "name": "MatchStatus",
+      "schema": "public",
+      "values": [
+        "NOT_STARTED",
+        "LIVE",
+        "FINISHED",
+        "POSTPONED",
+        "VOID"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

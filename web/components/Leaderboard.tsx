@@ -15,14 +15,20 @@ function initials(name: string) {
 interface Props {
   leaderboard: LeaderboardEntry[];
   maxRows?: number;
+  teamStandings?: { team: string; totalPoints: number }[];
 }
 
-export default function Leaderboard({ leaderboard, maxRows = 12 }: Props) {
+export default function Leaderboard({ leaderboard, maxRows = 10, teamStandings }: Props) {
   const sorted = [...leaderboard].sort((a, b) => b.totalPoints - a.totalPoints).slice(0, maxRows);
 
   const ALL_TEAMS: string[] = ['Team Budweiser', 'Team Trophy'];
   const teamTotals: Record<string, number> = Object.fromEntries(ALL_TEAMS.map(t => [t, 0]));
-  leaderboard.forEach(e => { teamTotals[e.team] = (teamTotals[e.team] || 0) + e.totalPoints; });
+  // Prefer full team standings from the API; fall back to summing the (capped) visible list.
+  if (teamStandings && teamStandings.length) {
+    teamStandings.forEach(t => { teamTotals[t.team] = (teamTotals[t.team] || 0) + t.totalPoints; });
+  } else {
+    leaderboard.forEach(e => { teamTotals[e.team] = (teamTotals[e.team] || 0) + e.totalPoints; });
+  }
   const teamArr = Object.entries(teamTotals).sort((a, b) => b[1] - a[1]);
   const maxTeamPts = teamArr[0]?.[1] || 1;
 

@@ -139,14 +139,14 @@ predictionsRouter.post(
       .select({ id: prediction.id })
       .from(prediction)
       .where(
-        and(eq(prediction.email, email), eq(prediction.matchDate, matchDate)),
+        and(eq(prediction.email, email), eq(prediction.fixtureId, found.id)),
       )
       .limit(1);
     if (existing) {
       res
         .status(400)
         .json({
-          error: "You have already submitted a prediction for this date.",
+          error: "You have already predicted this match.",
         });
       return;
     }
@@ -168,7 +168,7 @@ predictionsRouter.post(
         res
           .status(400)
           .json({
-            error: "You have already submitted a prediction for this date.",
+            error: "You have already predicted this match.",
           });
         return;
       }

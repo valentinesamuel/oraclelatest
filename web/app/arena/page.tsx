@@ -26,6 +26,9 @@ function statusLabel(status: string): string {
 function isLive(f: Fixture)     { return f.status === 'LIVE'; }
 function isFinished(f: Fixture) { return f.status === 'FINISHED'; }
 function canPredict(f: Fixture) { return f.status === 'NOT_STARTED' && new Date(f.startingAt) > new Date(); }
+// Kicked off but the data feed hasn't flipped the status to LIVE yet.
+function isInProgress(f: Fixture) { return f.status === 'NOT_STARTED' && new Date(f.startingAt) <= new Date(); }
+function isPlaying(f: Fixture) { return isLive(f) || isInProgress(f); }
 
 function useCountUp(target: number, active: boolean, duration = 1400) {
   const [val, setVal] = useState(0);
@@ -59,14 +62,15 @@ function FlagImg({ url, alt }: { url: string | null; alt: string }) {
 
 function StatusBadge({ fixture }: { fixture: Fixture }) {
   const live = isLive(fixture);
+  const inProgress = isInProgress(fixture);
   const finished = isFinished(fixture);
   const predict = canPredict(fixture);
-  const label = statusLabel(fixture.status);
-  const color = live ? 'var(--red)' : finished ? 'var(--t3)' : predict ? 'var(--c3)' : 'var(--orange)';
-  const bg    = live ? 'rgba(255,64,64,0.15)' : finished ? 'rgba(255,255,255,0.05)' : predict ? 'rgba(0,255,163,0.1)' : 'rgba(255,149,0,0.1)';
+  const label = inProgress ? 'IN PROGRESS' : statusLabel(fixture.status);
+  const color = live ? 'var(--red)' : inProgress ? 'var(--orange)' : finished ? 'var(--t3)' : predict ? 'var(--c3)' : 'var(--orange)';
+  const bg    = live ? 'rgba(255,64,64,0.15)' : inProgress ? 'rgba(255,149,0,0.15)' : finished ? 'rgba(255,255,255,0.05)' : predict ? 'rgba(0,255,163,0.1)' : 'rgba(255,149,0,0.1)';
   return (
     <span style={{ fontSize: 9, letterSpacing: 2, color, background: bg, border: `1px solid ${color}`, padding: '2px 7px', borderRadius: 3, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-      {live && <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, animation: 'pulse-dot 1s infinite', display: 'inline-block' }} />}
+      {(live || inProgress) && <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, animation: 'pulse-dot 1s infinite', display: 'inline-block' }} />}
       {label.toUpperCase()}
     </span>
   );
@@ -89,12 +93,16 @@ export default function ArenaPage() {
   const [loadingMsg, setLoadingMsg]       = useState('');
   const [revealStep, setRevealStep]       = useState(0);
   const [leaderboard, setLeaderboard]     = useState<LeaderboardEntry[]>([]);
+  const [teamStandings, setTeamStandings] = useState<{ team: string; totalPoints: number }[]>([]);
+  const [totalPlayers, setTotalPlayers]   = useState(0);
+  const [totalPredictions, setTotalPredictions] = useState(0);
   const [oracleStatus, setOracleStatus]   = useState('AWAITING PREDICTIONS');
   const [fixturesLoading, setFixturesLoading] = useState(true);
   const [mobileTab, setMobileTab]         = useState<MobileTab>('fixtures');
   const [identityLocked, setIdentityLocked] = useState(false);
+  const [myPredictions, setMyPredictions] = useState<Record<number, { guessHome: number; guessAway: number }>>({});
 
-  const liveFixtures     = fixtures.filter(isLive);
+  const liveFixtures     = fixtures.filter(isPlaying).sort((a, b) => new Date(a.startingAt).getTime() - new Date(b.startingAt).getTime());
   const predictable      = fixtures.filter(canPredict).sort((a, b) => new Date(a.startingAt).getTime() - new Date(b.startingAt).getTime());
   const finishedFixtures = fixtures.filter(isFinished).sort((a, b) => new Date(b.startingAt).getTime() - new Date(a.startingAt).getTime()).slice(0, 5);
   const liveCount        = liveFixtures.length;
@@ -121,6 +129,20 @@ export default function ArenaPage() {
       const res  = await fetch('/api/leaderboard');
       const data = await res.json();
       setLeaderboard(data.leaderboard ?? []);
+      setTeamStandings((data.teamStandings ?? []).map((t: any) => ({ team: t.team, totalPoints: t._sum?.totalPoints ?? 0 })));
+      setTotalPlayers(data.totalPlayers ?? 0);
+      setTotalPredictions(data.totalPredictions ?? 0);
+    } catch { /* silent */ }
+  }, []);
+
+  const fetchMyPredictions = useCallback(async (prefix: string) => {
+    if (!prefix.trim()) return;
+    try {
+      const res  = await fetch(`/api/my-predictions?prefix=${encodeURIComponent(prefix.trim())}`);
+      const data = await res.json();
+      const map: Record<number, { guessHome: number; guessAway: number }> = {};
+      (data.predictions ?? []).forEach((p: any) => { map[p.fixtureId] = { guessHome: p.guessHome, guessAway: p.guessAway }; });
+      setMyPredictions(map);
     } catch { /* silent */ }
   }, []);
 
@@ -137,17 +159,12 @@ export default function ArenaPage() {
         setEmailPrefix(e);
         setTeam(t as Team);
         setIdentityLocked(true);
+        fetchMyPredictions(e);
       }
     } catch {
       sessionStorage.removeItem('botb_identity');
     }
   }, []);
-
-  useEffect(() => {
-    if (view !== 'reveal' || !isMobile) return;
-    const timer = setTimeout(() => setMobileTab('fixtures'), 2500);
-    return () => clearTimeout(timer);
-  }, [view, isMobile]);
 
   useEffect(() => {
     const msgs: Record<View, string[]> = {
@@ -168,7 +185,7 @@ export default function ArenaPage() {
   }, [view]);
 
   const handleSelectMatch = (fixture: Fixture) => {
-    if (!canPredict(fixture)) return;
+    if (!canPredict(fixture) || myPredictions[fixture.id]) return;
     setSelectedMatch(fixture);
     setResultFixture(null);
     setRevealStep(0);
@@ -203,6 +220,7 @@ export default function ArenaPage() {
         return;
       }
       setResultFixture(data.fixture);
+      setMyPredictions(prev => ({ ...prev, [selectedMatch.id]: { guessHome: homeScore, guessAway: awayScore } }));
       if (!identityLocked) {
         const payload = btoa(JSON.stringify({ n: userName.trim(), e: emailPrefix.trim(), t: team }));
         sessionStorage.setItem('botb_identity', payload);
@@ -221,21 +239,25 @@ export default function ArenaPage() {
   const topPlayer = leaderboard[0];
 
   const FixtureRow = ({ fixture }: { fixture: Fixture }) => {
+    const myPick   = myPredictions[fixture.id];
+    const predicted = !!myPick;
     const active  = selectedMatch?.id === fixture.id;
-    const locked  = !canPredict(fixture);
+    const locked  = !canPredict(fixture) || predicted;
     const live    = isLive(fixture);
     const finished = isFinished(fixture);
     return (
       <div onClick={() => !locked && handleSelectMatch(fixture)} className="fixture-row" style={{
         padding: '10px 14px', borderBottom: '1px solid var(--b1)',
-        borderLeft: `3px solid ${active ? 'var(--c)' : live ? 'var(--red)' : 'transparent'}`,
-        background: active ? 'rgba(255,215,0,0.07)' : live ? 'rgba(255,64,64,0.04)' : 'transparent',
-        cursor: locked ? 'default' : 'pointer', opacity: locked && !live ? 0.7 : 1,
+        borderLeft: `3px solid ${active ? 'var(--c)' : predicted ? 'var(--c3)' : live ? 'var(--red)' : 'transparent'}`,
+        background: active ? 'rgba(255,215,0,0.07)' : predicted ? 'rgba(0,255,163,0.04)' : live ? 'rgba(255,64,64,0.04)' : 'transparent',
+        cursor: locked ? 'default' : 'pointer', opacity: locked && !live && !predicted ? 0.7 : 1,
         transition: 'all 0.2s',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 6 }}>
           <span style={{ fontSize: 9, letterSpacing: 1, color: 'var(--t3)' }}>{fixture.round ?? 'Group Stage'}</span>
-          <StatusBadge fixture={fixture} />
+          {predicted
+            ? <span style={{ fontSize: 9, letterSpacing: 1, color: 'var(--c3)', background: 'rgba(0,255,163,0.12)', border: '1px solid var(--c3)', padding: '2px 7px', borderRadius: 3, display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>✓ PREDICTED</span>
+            : <StatusBadge fixture={fixture} />}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <FlagImg url={fixture.homeFlagUrl} alt={fixture.homeTeamName} />
@@ -252,7 +274,8 @@ export default function ArenaPage() {
         </div>
         <div style={{ fontSize: 9, color: 'var(--t3)', marginTop: 5 }}>
           {new Date(fixture.startingAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {new Date(fixture.startingAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} WAT
-          {locked && !live && !finished && <span style={{ color: 'var(--orange)', marginLeft: 6 }}>🔒 Locked</span>}
+          {predicted && <span style={{ color: 'var(--c3)', marginLeft: 6, fontWeight: 700 }}>✓ Your pick: {myPick.guessHome}–{myPick.guessAway}</span>}
+          {locked && !live && !finished && !predicted && <span style={{ color: 'var(--orange)', marginLeft: 6 }}>🔒 Locked</span>}
         </div>
       </div>
     );
@@ -273,7 +296,7 @@ export default function ArenaPage() {
       <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', flexShrink: 0 }}>
         <div style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)', marginBottom: 2 }}>FIXTURES</div>
         <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1, color: 'var(--t1)' }}>
-          {fixturesLoading ? 'Loading...' : `${predictable.length} available to predict`}
+          {fixturesLoading ? 'Loading...' : `${predictable.filter(f => !myPredictions[f.id]).length} available to predict`}
         </div>
       </div>
       <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -520,10 +543,10 @@ export default function ArenaPage() {
           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>Leaderboard</div>
         </div>
         <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', borderRadius: 3, background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: 'var(--c)' }}>
-          {leaderboard.length} PLAYERS
+          {totalPlayers} PLAYERS
         </span>
       </div>
-      <Leaderboard leaderboard={leaderboard} />
+      <Leaderboard leaderboard={leaderboard} teamStandings={teamStandings} />
     </div>
   );
 
@@ -549,7 +572,7 @@ export default function ArenaPage() {
           </div>
         )}
         <div className="resp-hide-mobile" style={{ background: 'var(--bg3)', border: '1px solid var(--b1)', padding: '4px 14px', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t2)' }}>
-          {leaderboard.length} PLAYERS
+          {totalPlayers} PLAYERS
         </div>
       </div>
     </div>
@@ -608,7 +631,7 @@ export default function ArenaPage() {
             </div>
           )}
           <div style={{ background: 'var(--bg3)', border: '1px solid var(--b1)', padding: '4px 14px', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t2)' }}>
-            {leaderboard.length} PLAYERS
+            {totalPlayers} PLAYERS
           </div>
         </div>
       </div>
@@ -620,7 +643,7 @@ export default function ArenaPage() {
         <div style={{ borderLeft: '1px solid var(--b1)' }}>{renderLeaderboardPanel()}</div>
       </div>
 
-      <Ticker topPlayer={topPlayer?.name} topPts={topPlayer?.totalPoints} totalPreds={leaderboard.length} />
+      <Ticker topPlayer={topPlayer?.name} topPts={topPlayer?.totalPoints} totalPreds={totalPredictions} />
     </div>
   );
 }
