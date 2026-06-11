@@ -11,7 +11,7 @@ export default function Ticker({ topPlayer, topPts, totalPreds }: Props) {
     topPlayer ? `TOP PREDICTOR: ${topPlayer} — ${topPts} PTS` : null,
     '⚡ UPSET ALERT: Morocco 56% to defeat Germany',
     '⚡ CHAOS MODE: Japan vs Italy — 52% upset probability',
-    totalPreds ? `TOTAL PREDICTIONS TODAY: ${totalPreds}` : null,
+    totalPreds ? `TOTAL PREDICTIONS: ${totalPreds}` : null,
     'GRAND PRIZE: BEAT THE BOTB CHAMPION TROPHY — CEREMONY AT 17:00',
     'SCAN THE QR CODE NOW TO CHALLENGE ORACLE',
   ].filter((item): item is string => item !== null);

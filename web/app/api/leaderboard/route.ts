@@ -22,6 +22,11 @@ export async function GET() {
     orderBy: { _sum: { totalPoints: 'desc' } },
   });
 
+  // All-time totals (independent of the weekly/processed ranking window).
+  const totalPredictions = await prisma.prediction.count();
+  const distinctPlayers = await prisma.prediction.groupBy({ by: ['email'] });
+  const totalPlayers = distinctPlayers.length;
+
   const leaderboard = weekly.map((entry, i) => ({
     rank: i + 1,
     name: entry.name,
@@ -30,5 +35,5 @@ export async function GET() {
     totalPoints: entry._sum.totalPoints ?? 0,
   }));
 
-  return NextResponse.json({ leaderboard, teamStandings });
+  return NextResponse.json({ leaderboard, teamStandings, totalPlayers, totalPredictions });
 }
