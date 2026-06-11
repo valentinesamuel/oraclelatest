@@ -69,8 +69,8 @@ app.use(express.json());
 
 app.use("/api/health", healthRouter);
 
-app.use("/api/system", authMiddleware, systemRouter);
-app.use("/api/predictions", authMiddleware, predictionsRouter);
+app.use("/api/system", systemRouter);
+app.use("/api/predictions", predictionsRouter);
 
 async function runMigrations(): Promise<void> {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
