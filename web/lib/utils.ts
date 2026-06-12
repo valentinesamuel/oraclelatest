@@ -22,6 +22,16 @@ export function getMondayMidnightWAT(): Date {
   return new Date(mondayWAT.getTime() - WAT_OFFSET_MS);
 }
 
+export function getTodayRangeWAT(): { start: Date; end: Date } {
+  const WAT_OFFSET_MS = 60 * 60 * 1000; // UTC+1
+  const nowWAT = new Date(Date.now() + WAT_OFFSET_MS);
+  const startWAT = new Date(nowWAT);
+  startWAT.setUTCHours(0, 0, 0, 0);
+  const start = new Date(startWAT.getTime() - WAT_OFFSET_MS); // today 00:00 WAT, as UTC
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000); // tomorrow 00:00 WAT, as UTC
+  return { start, end };
+}
+
 export function formatKickoffWAT(date: Date): string {
   const WAT_OFFSET_MS = 60 * 60 * 1000;
   const wat = new Date(date.getTime() + WAT_OFFSET_MS);

@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/db';
+import { getTodayRangeWAT } from '../../../lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const { start, end } = getTodayRangeWAT();
   const fixtures = await prisma.fixture.findMany({
-    where: { status: { not: 'VOID' } },
+    where: {
+      status: { not: 'VOID' },
+      OR: [
+        { startingAt: { gte: start, lt: end } },
+        { status: 'LIVE' },
+      ],
+    },
     orderBy: { startingAt: 'asc' },
     select: {
       id: true, name: true, startingAt: true,
