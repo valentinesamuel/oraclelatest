@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/db';
-import { getMondayMidnightWAT, obfuscateEmail } from '../../../lib/utils';
+import { getThursdayMidnightWAT, obfuscateEmail } from '../../../lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const weekStart = getMondayMidnightWAT();
+  const weekStart = getThursdayMidnightWAT();
 
   const weekly = await prisma.prediction.groupBy({
     by: ['email', 'name', 'team'],
