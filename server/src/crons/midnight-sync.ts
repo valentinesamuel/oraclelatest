@@ -8,20 +8,34 @@ import { formatDate } from "../utils/date";
 
 const PROCESS_AT_OFFSET_MS = 120 * 60 * 1000;
 
+function watDateString(offsetDays: number): string {
+  const WAT_OFFSET_MS = 60 * 60 * 1000;
+  const ts = Date.now() + WAT_OFFSET_MS + offsetDays * 24 * 60 * 60 * 1000;
+  const d = new Date(ts);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
 export async function runDailySync(
   triggeredBy: "cron" | "manual" = "cron",
   requestId?: string,
 ): Promise<{ fixtures: number; jobs: number }> {
-  const today = formatDate(new Date());
+  const datesToSync = [watDateString(-1), watDateString(0), watDateString(1)];
   const log = syncLogger.child({
     triggeredBy,
     ...(requestId ? { requestId } : {}),
   });
   const startTime = Date.now();
 
-  log.info({ date: today }, "Daily sync started");
+  log.info({ dates: datesToSync }, "Daily sync started");
 
-  const fixtures = await fetchFixturesForDate(today);
+  let allFixtures: Awaited<ReturnType<typeof fetchFixturesForDate>> = [];
+  for (const dateStr of datesToSync) {
+    const dayFixtures = await fetchFixturesForDate(dateStr);
+    log.info({ date: dateStr, count: dayFixtures.length }, "Fetched fixtures");
+    allFixtures = allFixtures.concat(dayFixtures);
+  }
+
+  const fixtures = allFixtures;
   let fixtureCount = 0;
   let jobCount = 0;
 
@@ -94,7 +108,7 @@ export async function runDailySync(
 
   log.info(
     {
-      date: today,
+      dates: datesToSync,
       fixturesProcessed: fixtureCount,
       jobsCreated: jobCount,
       durationMs: Date.now() - startTime,

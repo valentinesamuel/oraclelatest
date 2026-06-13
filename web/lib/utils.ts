@@ -7,28 +7,30 @@ export function obfuscateEmail(email: string): string {
   return `${first}${stars}${last}@${domain}`;
 }
 
-export function getMondayMidnightWAT(): Date {
+export function getThursdayMidnightWAT(): Date {
   const WAT_OFFSET_MS = 60 * 60 * 1000; // UTC+1
   const nowUTC = Date.now();
   const nowWAT = new Date(nowUTC + WAT_OFFSET_MS);
 
-  const dayOfWeek = nowWAT.getUTCDay(); // 0=Sun, 1=Mon
-  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const dayOfWeek = nowWAT.getUTCDay(); // 0=Sun, 1=Mon, ..., 4=Thu
+  const daysToThursday = dayOfWeek >= 4 ? dayOfWeek - 4 : dayOfWeek + 3;
 
-  const mondayWAT = new Date(nowWAT);
-  mondayWAT.setUTCDate(nowWAT.getUTCDate() - daysToMonday);
-  mondayWAT.setUTCHours(0, 0, 0, 0);
+  const thursdayWAT = new Date(nowWAT);
+  thursdayWAT.setUTCDate(nowWAT.getUTCDate() - daysToThursday);
+  thursdayWAT.setUTCHours(0, 0, 0, 0);
 
-  return new Date(mondayWAT.getTime() - WAT_OFFSET_MS);
+  return new Date(thursdayWAT.getTime() - WAT_OFFSET_MS);
 }
 
-export function getTodayRangeWAT(): { start: Date; end: Date } {
+export function get3DayRangeWAT(): { start: Date; end: Date } {
   const WAT_OFFSET_MS = 60 * 60 * 1000; // UTC+1
+  const DAY_MS = 24 * 60 * 60 * 1000;
   const nowWAT = new Date(Date.now() + WAT_OFFSET_MS);
-  const startWAT = new Date(nowWAT);
-  startWAT.setUTCHours(0, 0, 0, 0);
-  const start = new Date(startWAT.getTime() - WAT_OFFSET_MS); // today 00:00 WAT, as UTC
-  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000); // tomorrow 00:00 WAT, as UTC
+  const todayWAT = new Date(nowWAT);
+  todayWAT.setUTCHours(0, 0, 0, 0);
+  const todayMidnightUTC = new Date(todayWAT.getTime() - WAT_OFFSET_MS);
+  const start = new Date(todayMidnightUTC.getTime() - DAY_MS); // yesterday 00:00 WAT as UTC
+  const end = new Date(todayMidnightUTC.getTime() + 2 * DAY_MS); // day-after-tomorrow 00:00 WAT as UTC
   return { start, end };
 }
 

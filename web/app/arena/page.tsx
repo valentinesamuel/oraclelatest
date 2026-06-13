@@ -293,31 +293,31 @@ export default function ArenaPage() {
 
   const renderFixturePanel = () => (
     <div style={{ borderRight: '1px solid var(--b1)', background: 'var(--sidebar-bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-      <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', flexShrink: 0 }}>
+      {/* <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--b1)', background: 'var(--bg2)', flexShrink: 0 }}>
         <div style={{ fontSize: 10, letterSpacing: 4, color: 'var(--t3)', marginBottom: 2 }}>FIXTURES</div>
         <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1, color: 'var(--t1)' }}>
           {fixturesLoading ? 'Loading...' : `${predictable.filter(f => !myPredictions[f.id]).length} available to predict`}
         </div>
-      </div>
+      </div> */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {fixturesLoading && (
           <div style={{ padding: 20, textAlign: 'center', color: 'var(--t3)', fontSize: 12 }}>Syncing fixtures…</div>
         )}
         {liveFixtures.length > 0 && (
           <>
-            <div style={{ padding: '6px 14px', background: 'rgba(255,64,64,0.08)', fontSize: 8, letterSpacing: 3, color: 'var(--red)', borderBottom: '1px solid var(--b1)' }}>⚡ LIVE NOW</div>
+            <div style={{ padding: '6px 14px', background: 'rgba(255,64,64,0.08)', fontSize: 8, letterSpacing: 3, color: 'var(--red)', borderBottom: '1px solid var(--b1)' }}>LIVE</div>
             {liveFixtures.map(f => <FixtureRow key={f.id} fixture={f} />)}
           </>
         )}
         {predictable.length > 0 && (
           <>
-            <div style={{ padding: '6px 14px', background: 'rgba(255,215,0,0.04)', fontSize: 8, letterSpacing: 3, color: 'var(--c)', borderBottom: '1px solid var(--b1)' }}>PREDICT NOW</div>
+            <div style={{ padding: '6px 14px', background: 'rgba(255,215,0,0.04)', fontSize: 8, letterSpacing: 3, color: 'var(--c)', borderBottom: '1px solid var(--b1)' }}>UPCOMING</div>
             {predictable.map(f => <FixtureRow key={f.id} fixture={f} />)}
           </>
         )}
         {finishedFixtures.length > 0 && (
           <>
-            <div style={{ padding: '6px 14px', background: 'rgba(255,255,255,0.02)', fontSize: 8, letterSpacing: 3, color: 'var(--t3)', borderBottom: '1px solid var(--b1)' }}>RESULTS</div>
+            <div style={{ padding: '6px 14px', background: 'rgba(255,255,255,0.02)', fontSize: 8, letterSpacing: 3, color: 'var(--t3)', borderBottom: '1px solid var(--b1)' }}>COMPLETED</div>
             {finishedFixtures.map(f => <FixtureRow key={f.id} fixture={f} />)}
           </>
         )}

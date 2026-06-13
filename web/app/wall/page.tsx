@@ -225,6 +225,9 @@ export default function WallPage() {
   // ── Shared: Fixture list sidebar ──
   const renderFixtureList = () => (
     <>
+      {liveFixtures.length > 0 && (
+        <div style={{ padding: '6px 14px', background: 'rgba(255,64,64,0.08)', fontSize: 8, letterSpacing: 3, color: 'var(--red)', borderBottom: '1px solid var(--b1)' }}>LIVE</div>
+      )}
       {liveFixtures.map(f => (
         <div key={f.id} onClick={() => handleSelect(f.id)} style={{ padding: '10px 14px', borderBottom: '1px solid var(--b1)', borderLeft: `3px solid ${f.id === selectedId ? 'var(--red)' : 'transparent'}`, background: f.id === selectedId ? 'rgba(255,64,64,0.06)' : 'rgba(255,64,64,0.03)', cursor: 'pointer' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
@@ -246,6 +249,9 @@ export default function WallPage() {
           </div>
         </div>
       ))}
+      {predictable.length > 0 && (
+        <div style={{ padding: '6px 14px', background: 'rgba(255,215,0,0.04)', fontSize: 8, letterSpacing: 3, color: 'var(--c)', borderBottom: '1px solid var(--b1)' }}>UPCOMING</div>
+      )}
       {predictable.map(f => (
         <div key={f.id} onClick={() => handleSelect(f.id)} style={{ padding: '10px 14px', borderBottom: '1px solid var(--b1)', borderLeft: `3px solid ${f.id === selectedId ? 'var(--c)' : 'transparent'}`, background: f.id === selectedId ? 'rgba(255,215,0,0.07)' : 'transparent', cursor: 'pointer' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
@@ -266,6 +272,9 @@ export default function WallPage() {
           </div>
         </div>
       ))}
+      {finishedFixtures.length > 0 && (
+        <div style={{ padding: '6px 14px', background: 'rgba(255,255,255,0.02)', fontSize: 8, letterSpacing: 3, color: 'var(--t3)', borderBottom: '1px solid var(--b1)' }}>COMPLETED</div>
+      )}
       {finishedFixtures.slice(0, 5).map(f => (
         <div key={f.id} onClick={() => handleSelect(f.id)} style={{ padding: '10px 14px', borderBottom: '1px solid var(--b1)', borderLeft: `3px solid ${f.id === selectedId ? 'var(--t3)' : 'transparent'}`, opacity: 0.7, cursor: 'pointer' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
